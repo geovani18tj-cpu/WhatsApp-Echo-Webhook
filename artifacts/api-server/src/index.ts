@@ -606,7 +606,7 @@ async function processWebhook(body: unknown): Promise<void> {
   await sendWhatsAppReply(sender, messageId, receivedText);
 }
 
-app.get("/admin", (_request, response) => {
+app.get(["/admin", "/api/admin"], (_request, response) => {
   response.type("html").send(adminPage);
 });
 

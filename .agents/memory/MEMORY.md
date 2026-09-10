@@ -1,0 +1,1 @@
+- [API preview path aliases](api-preview-paths.md) — keep non-API pages reachable from both their public path and the API artifact preview base.
