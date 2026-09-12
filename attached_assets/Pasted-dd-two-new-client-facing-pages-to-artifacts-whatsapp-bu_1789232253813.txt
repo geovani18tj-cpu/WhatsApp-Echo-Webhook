@@ -1,0 +1,35 @@
+dd two new client-facing pages to artifacts/whatsapp-business, matching the existing visual style in src/pages/home.tsx and src/pages/admin.tsx exactly (same colors, fonts, radii, shadows — don't invent a new look). Use the lucide-react icons already imported elsewhere in this app for icon needs (e.g. Tag, ShieldCheck, RotateCcw, Camera, Clock3, Layers, ArrowRight, Check) instead of raw SVG.
+
+Design tokens to reuse (already in the codebase): primary green 
+#1c775b (hover 
+#145d46), dark heading text 
+#1c382d/
+#213b30, cream backgrounds 
+#fffdfa/
+#f7f2ec/
+#faf7f3, borders 
+#e5dbd1/
+#eee7df, muted text 
+#777b75/
+#9a958e, terracotta accent 
+#dc8454, headings in 'Space Grotesk' (bold, tight letter-spacing), body in 'DM Sans'. Logo mark = green rounded-square with a white message-circle icon + "Likkle Table" wordmark, same as the header in home.tsx.
+
+1. New file src/pages/landing.tsx — a public marketing page, no auth required. Sections, top to bottom:
+
+Nav bar: logo, links to "How it works" / "Pricing" / "Log in", and a "Get started" button (green).
+Hero: eyebrow pill "WhatsApp + Instagram inbox", headline "Never miss another WhatsApp order.", subhead "Likkle Table auto-sends your price list, answers the questions you get every day, and only pings you for what actually needs you — on WhatsApp and Instagram, using the number and page you already have.", a "Get started" button + "See how it works" link. Next to the copy, show a small chat-mockup card (reuse the bubble styling from home.tsx's conversation view) with: customer "Good morning! Unu have di price list?" → auto reply with a price-list file attachment, labeled "Sent automatically" → customer "Nice. Unu deliver a Portmore?" → auto reply "Yes — Kingston, St. Andrew & Portmore. Usually 45–75 min.", labeled "Answered automatically".
+"Built for wholesalers who live on WhatsApp" — chip row: Building supplies, Packaging, Auto parts, Food distribution, Stationery, Beauty supply, plus "1–10 staff · Kingston, Jamaica".
+"How it works" — 4 numbered cards: (1) Connect your number — link your existing WhatsApp and Instagram, same number, nothing changes for customers; (2) Load what you already know — price list, FAQs, hours, delivery areas; (3) Del takes the repeat questions — answered instantly, word for word how you'd say it; (4) You get what's left — anything uncertain goes to your phone, plus a morning digest.
+Features grid — 6 cards: Media library, Approved answers only (never guesses a price/date/availability), One-tap correction, Photo reading (reads a photo, never confirms stock/price itself), Morning digest, WhatsApp + Instagram (one inbox, split by platform).
+Pricing — 3 cards: Starter J$7,500/mo (~US$49) — WhatsApp inbox, media library, approved FAQs, correction loop, morning digest. Plus J$12,500/mo (~US$79, marked "Most popular") — everything in Starter + Instagram DMs in the same inbox, split by platform. Pro J$20,000/mo (~US$129) — everything in Plus + Messenger + a second connected account. Above the cards, a banner: "The first five businesses lock in J$4,500/mo — for as long as they stay."
+Final CTA band on dark green (
+#16352b) background: "Ready to stop typing the same answer twice a day?" + "Get started" button.
+Footer: logo + one-line description, a Product column (How it works / Pricing / Log in), a Contact column with placeholders [YOUR SUPPORT EMAIL] and [YOUR WHATSAPP NUMBER] (leave these as literal bracketed placeholders — don't invent real contact info), copyright line.
+Fully responsive: single column on mobile, nav links collapse.
+
+2. New file src/pages/login.tsx — split-screen layout. Left panel (hidden on mobile): dark green (
+#16352b) background with the logo, headline "Your customers' messages, answered the way you'd answer them.", three checkmark bullets (Same WhatsApp number your customers already have / Nothing goes out that you didn't write yourself / One inbox, WhatsApp and Instagram side by side), and small text "Built in Kingston, for Kingston wholesalers." at the bottom. Right panel: centered card with "Log in" eyebrow, "Welcome back" heading, email field, password field with a "Forgot password?" link, a green "Log in" button, a divider, an "Email me a login link" secondary button, and "New to Likkle Table? Get started" linking back to the landing page.
+
+3. Routing — check whatever router is already set up (likely in App.tsx or main.tsx) and wire it so: / renders the new landing page, /login renders the new login page, and the existing Inbox dashboard (currently home.tsx, currently mounted at /) moves to /inbox. Update any internal links/nav that pointed at the old root accordingly. Leave /admin, /corrections/:businessId, and /demo exactly where they are.
+
+Important — do not wire up real authentication yet. There's no client account system in this codebase (no per-business login table, no password storage, no sessions) — only the shared ADMIN_TOKEN used by /admin. For now, make the login form's submit button just navigate to /inbox on click, with no real check — this is a visual placeholder only. Add a one-line code comment on the submit handler saying real auth (a business_users table, password hashing, sessions) is a separate task, not covered here.
