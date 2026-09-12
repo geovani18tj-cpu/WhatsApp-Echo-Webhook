@@ -1,2 +1,3 @@
 - [API preview path aliases](api-preview-paths.md) — keep non-API pages reachable from both their public path and the API artifact preview base.
 - [Multipart OpenAPI clients](multipart-openapi.md) — binary multipart schemas can break shared Node typechecks; keep native FormData uploads when File/Blob DOM types are unavailable.
+- [Supabase endpoint validation](supabase-endpoints.md) — validate that Supabase targets use a project-ref `.supabase.co` host; dashboard URLs make REST calls return HTML 404 pages.
