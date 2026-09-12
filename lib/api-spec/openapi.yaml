@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: business
+    description: WhatsApp business administration
 paths:
   /healthz:
     get:
@@ -24,6 +26,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /facts:
+    post:
+      operationId: saveBusinessFact
+      tags: [business]
+      summary: Save a business fact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessFactInput"
+      responses:
+        "200":
+          description: Fact accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessStatus"
+        "400":
+          description: Invalid fact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorStatus"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +59,26 @@ components:
           type: string
       required:
         - status
+    SuccessStatus:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required: [ok]
+    ErrorStatus:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    BusinessFactInput:
+      type: object
+      properties:
+        key:
+          type: string
+          minLength: 1
+        value:
+          type: string
+          minLength: 1
+      required: [key, value]
 

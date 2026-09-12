@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "WhatsApp Business"
+description = "A production web command center for managing WhatsApp customer conversations, approved business facts, response controls, and shareable media while using the existing WhatsApp Cloud API server."
+version = "1.0.0"
+id = "artifacts/whatsapp-business"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21384
+
+[services.development]
+run = "pnpm --filter @workspace/whatsapp-business run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/whatsapp-business", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/whatsapp-business/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21384"
+BASE_PATH = "/"

@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface BusinessFactInput {
+  /** @minLength 1 */
+  key: string;
+  /** @minLength 1 */
+  value: string;
 }
