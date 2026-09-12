@@ -11,11 +11,14 @@ create table if not exists public.businesses (
   owner_whatsapp_number text,
   instagram_user_id text unique,
   instagram_page_token text,
+  is_demo boolean not null default false,
   timezone text not null default 'America/Jamaica',
   digest_hour smallint not null default 9 check (digest_hour between 0 and 23),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.businesses add column if not exists is_demo boolean not null default false;
 
 create table if not exists public.faqs (
   id uuid primary key default gen_random_uuid(),

@@ -462,6 +462,66 @@ app.get(["/health", "/api/health", "/api/healthz"], async (_request, response) =
   response.status(200).json(result);
 });
 
+app.get(["/demo", "/api/demo"], async (_request, response) => {
+  try {
+    const businesses = await supabase<Row[]>("/rest/v1/businesses?is_demo=eq.true&select=id,name,phone_number_id,instagram_user_id&limit=1");
+    const business = businesses[0];
+    if (!business) {
+      response.status(404).type("html").send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Demo not seeded</title></head><body><h1>Demo not seeded</h1><p>Run <code>supabase/demo_seed.sql</code> after <code>supabase/schema.sql</code>.</p></body></html>`);
+      return;
+    }
+    const businessId = encodeURIComponent(String(business.id));
+    const [inbound, outbound] = await Promise.all([
+      supabase<Row[]>(`/rest/v1/inbound_message_events?business_id=eq.${businessId}&select=channel,sender_id,message_type,message_text,outcome,created_at&order=created_at.asc`),
+      supabase<Row[]>(`/rest/v1/outbound_message_events?business_id=eq.${businessId}&status=eq.sent&select=channel,recipient_id,message_type,message_text,status,created_at&order=created_at.asc`),
+    ]);
+    const renderThread = (channel: "whatsapp" | "instagram", label: string): string => {
+      const messages = [
+        ...inbound.filter((event) => event.channel === channel).map((event) => ({
+          direction: "inbound" as const,
+          createdAt: event.created_at,
+          messageType: event.message_type,
+          messageText: event.message_text,
+          outcome: event.outcome,
+        })),
+        ...outbound.filter((event) => event.channel === channel).map((event) => ({
+          direction: "outbound" as const,
+          createdAt: event.created_at,
+          messageType: event.message_type,
+          messageText: event.message_text,
+          outcome: undefined,
+        })),
+      ].sort((left, right) => String(left.createdAt).localeCompare(String(right.createdAt)));
+      const bubbles = messages.map((message) => {
+        const outgoing = message.direction === "outbound";
+        const type = stringValue(message.messageType) ?? "message";
+        const text = stringValue(message.messageText) ?? `${type} sent`;
+        const detail = outgoing
+          ? type === "document" ? "Automated media match" : "Automated FAQ reply"
+          : stringValue(message.outcome) === "media_reply" ? "Matched price list" : "Matched FAQ";
+        return `<div class="message ${outgoing ? "outgoing" : "incoming"}">
+          <div class="bubble">${type === "document" ? '<span class="file">PDF</span>' : ""}${escapeHtml(text)}</div>
+          <small>${escapeHtml(detail)}</small>
+        </div>`;
+      }).join("");
+      return `<section class="thread ${channel}">
+        <header><span class="channel-dot"></span><div><strong>${escapeHtml(label)}</strong><span>${channel === "whatsapp" ? "demo-wa-customer" : "demo-ig-customer"}</span></div><span class="connected">Connected</span></header>
+        <div class="messages">${bubbles || "<p>No seeded messages found.</p>"}</div>
+      </section>`;
+    };
+    response.type("html").send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(business.name)} — automation demo</title><style>
+      *{box-sizing:border-box}body{margin:0;background:#f5f2eb;color:#18352d;font:15px/1.45 Inter,ui-sans-serif,system-ui,sans-serif}.page{max-width:1180px;margin:auto;padding:52px 24px 72px}
+      .eyebrow{color:#218363;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}h1{font-size:clamp(32px,5vw,56px);line-height:1.02;margin:12px 0 10px;letter-spacing:-.04em}.intro{color:#69736d;font-size:17px;max-width:680px;margin-bottom:34px}
+      .threads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.thread{background:#fff;border:1px solid #ded9cf;border-radius:22px;overflow:hidden;box-shadow:0 14px 40px #34534712}.thread header{height:78px;display:flex;align-items:center;gap:12px;padding:0 20px;color:#fff}.thread header div{display:flex;flex-direction:column}.thread header span{font-size:12px;opacity:.82}.channel-dot{width:13px;height:13px;border-radius:50%;background:#fff}.connected{margin-left:auto!important;border:1px solid #ffffff55;border-radius:999px;padding:5px 9px;opacity:1!important}
+      .whatsapp header{background:#176b51}.instagram header{background:linear-gradient(110deg,#833ab4,#c13584 48%,#fd1d1d)}.messages{min-height:480px;padding:26px 18px;background:linear-gradient(#faf9f6dd,#faf9f6dd),radial-gradient(circle at 15px 15px,#21836312 1px,transparent 1px);background-size:auto,30px 30px}
+      .message{max-width:83%;margin:0 0 18px}.message.outgoing{margin-left:auto;text-align:right}.bubble{text-align:left;padding:13px 15px;border-radius:16px;background:#fff;border:1px solid #e4dfd6;box-shadow:0 3px 10px #233a3210}.outgoing .bubble{background:#dff3e9;border-color:#c7e6d8}.instagram .outgoing .bubble{background:#f5e4f0;border-color:#ebcade}.message small{display:block;color:#7c837f;margin:5px 5px 0}.file{display:inline-block;background:#d83b52;color:#fff;border-radius:6px;padding:3px 7px;margin-right:8px;font-size:10px;font-weight:800}
+      @media(max-width:760px){.page{padding:34px 14px}.threads{grid-template-columns:1fr}.messages{min-height:390px}}
+    </style></head><body><main class="page"><div class="eyebrow">Live seeded walkthrough</div><h1>${escapeHtml(business.name)}</h1><p class="intro">One business, two connected channels. Both conversations below are loaded live from the seeded Supabase message rows.</p><div class="threads">${renderThread("whatsapp", "WhatsApp")}${renderThread("instagram", "Instagram")}</div></main></body></html>`);
+  } catch (error) {
+    response.status(502).type("html").send(`<h1>Could not load demo</h1><p>${escapeHtml(errorMessage(error))}</p>`);
+  }
+});
+
 app.get("/api/businesses", (request, response) => {
   if (!requireAdmin(request, response)) return;
   void supabase<Row[]>("/rest/v1/businesses?select=id,name,phone_number_id,owner_whatsapp_number,instagram_user_id,timezone,digest_hour,created_at,updated_at&order=created_at.desc")

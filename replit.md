@@ -12,7 +12,7 @@ Protected multi-business inbox automation with FAQ and private media replies.
 - Supabase setup: run `supabase/schema.sql` in the Supabase SQL editor, then optionally run `supabase/demo_seed.sql` for fake walkthrough data. The app uses the Replit Supabase connector; do not configure database URL or service-role credentials in app code.
 - Configure `ADMIN_TOKEN`, `WHATSAPP_VERIFY_TOKEN` (or the legacy `VERIFY_TOKEN`), and optionally `WHATSAPP_API_VERSION` / `META_APP_SECRET` as Replit Secrets. Open `/admin` and enter the admin token for the current browser session.
 - In Meta, connect WhatsApp and Instagram to the same webhook path `/webhook` and subscribe to messages. Instagram requires a Professional (Business or Creator) account linked to a Facebook Page. Add each business's per-channel credentials through `/admin`; they are never returned by list/read APIs or persisted in the browser.
-- Complete Meta's webhook verification and external subscription steps before treating traffic as live. `/demo` remains the sample command-centre experience.
+- Complete Meta's webhook verification and external subscription steps before treating traffic as live. `/demo` renders the seeded WhatsApp and Instagram walkthrough live from Supabase.
 
 ## Stack
 
@@ -27,7 +27,7 @@ Protected multi-business inbox automation with FAQ and private media replies.
 
 - `artifacts/api-server/src/index.ts` — Express API, shared Meta webhooks, image OCR escalation, protected admin routes, and the server-rendered FAQ corrections page.
 - `supabase/schema.sql` — source-of-truth database schema, including active FAQ controls and matched FAQ event references.
-- `supabase/demo_seed.sql` — optional non-secret demo business, FAQs, and media metadata.
+- `supabase/demo_seed.sql` — optional non-secret dual-channel demo business, FAQs, media metadata, and WhatsApp/Instagram threads used by `/demo`.
 - `lib/api-spec/openapi.yaml` — JSON API contract used to generate shared clients.
 - `artifacts/whatsapp-business/src/` — React command centre and admin interface.
 

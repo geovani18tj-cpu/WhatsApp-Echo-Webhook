@@ -1,0 +1,12 @@
+Build the /demo walkthrough that replit.md references but was never implemented, and seed both WhatsApp and Instagram data for it.
+
+1. In supabase/schema.sql, add an `is_demo` boolean column (default false) to businesses, and add instagram_page_token/instagram_user_id demo values support (columns already exist).
+
+2. Create supabase/demo_seed.sql: delete any existing demo business first (is_demo = true), then insert ONE fictional business (e.g. "Likkle Table Demo") with is_demo = true, populated with BOTH WhatsApp credentials (fake phone_number_id/whatsapp_access_token) AND Instagram credentials (fake instagram_user_id/instagram_page_token) — same business, both channels connected, like a real Plus-tier customer. Add one media item (price list) and two FAQs (hours, delivery — include a Patois trigger phrase on at least one). Seed inbound_message_events + outbound_message_events for TWO separate threads:
+   - A WhatsApp thread: a customer asking for the price list (media match) and one FAQ hit.
+   - An Instagram thread: a different fake sender id, asking the same kind of questions, showing a media match and an FAQ hit on that channel too.
+   Use distinct fake customer ids per channel (e.g. "demo-wa-customer", "demo-ig-customer") so threads don't mix.
+
+3. Add GET /demo (and /api/demo if the artifact preview base needs it, per the api-preview-paths memory note) to artifacts/api-server/src/index.ts: a simple server-rendered HTML page, no auth needed (read-only, seeded data). Show the WhatsApp thread and the Instagram thread as two separate chat-bubble-styled panels side by side or stacked, each labeled with its channel, so it's visually obvious how the same business's automation looks on both. Style WhatsApp green, Instagram's panel with its usual pink/purple gradient accent, so they're easy to tell apart. Pull the data live from the seeded rows — don't hardcode the conversation text in the route.
+
+Keep the same HTML-rendering style you already used for /admin.
