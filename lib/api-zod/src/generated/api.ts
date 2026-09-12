@@ -162,6 +162,43 @@ export const DisableFaqResponse = zod.object({
 })
 
 
+export const DraftBusinessAssistantProposalsParams = zod.object({
+  "businessId": zod.coerce.string().uuid()
+})
+
+export const draftBusinessAssistantProposalsBodyMessageMax = 4000;
+
+export const draftBusinessAssistantProposalsBodyHistoryItemContentMax = 4000;
+
+export const draftBusinessAssistantProposalsBodyHistoryMax = 12;
+
+
+
+export const DraftBusinessAssistantProposalsBody = zod.object({
+  "message": zod.string().min(1).max(draftBusinessAssistantProposalsBodyMessageMax),
+  "history": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant']),
+  "content": zod.string().min(1).max(draftBusinessAssistantProposalsBodyHistoryItemContentMax)
+})).max(draftBusinessAssistantProposalsBodyHistoryMax).optional()
+})
+
+export const DraftBusinessAssistantProposalsResponse = zod.object({
+  "reply": zod.string(),
+  "proposals": zod.array(zod.union([zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['faq']),
+  "question": zod.string(),
+  "answer": zod.string(),
+  "triggers": zod.array(zod.string())
+}),zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['media']),
+  "label": zod.string(),
+  "triggers": zod.array(zod.string())
+})]))
+})
+
+
 export const ListMediaParams = zod.object({
   "businessId": zod.coerce.string().uuid()
 })

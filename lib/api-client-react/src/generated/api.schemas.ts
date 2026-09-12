@@ -85,6 +85,67 @@ export interface FaqInput {
   triggers?: string[];
 }
 
+export type AssistantHistoryMessageRole = typeof AssistantHistoryMessageRole[keyof typeof AssistantHistoryMessageRole];
+
+
+export const AssistantHistoryMessageRole = {
+  user: 'user',
+  assistant: 'assistant',
+} as const;
+
+export interface AssistantHistoryMessage {
+  role: AssistantHistoryMessageRole;
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  content: string;
+}
+
+export interface AssistantMessageInput {
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  message: string;
+  /** @maxItems 12 */
+  history?: AssistantHistoryMessage[];
+}
+
+export type AssistantFaqDraftType = typeof AssistantFaqDraftType[keyof typeof AssistantFaqDraftType];
+
+
+export const AssistantFaqDraftType = {
+  faq: 'faq',
+} as const;
+
+export interface AssistantFaqDraft {
+  id: string;
+  type: AssistantFaqDraftType;
+  question: string;
+  answer: string;
+  triggers: string[];
+}
+
+export type AssistantMediaDraftType = typeof AssistantMediaDraftType[keyof typeof AssistantMediaDraftType];
+
+
+export const AssistantMediaDraftType = {
+  media: 'media',
+} as const;
+
+export interface AssistantMediaDraft {
+  id: string;
+  type: AssistantMediaDraftType;
+  label: string;
+  triggers: string[];
+}
+
+export interface AssistantDraftResponse {
+  reply: string;
+  proposals: (AssistantFaqDraft | AssistantMediaDraft)[];
+}
+
 export interface MediaItem {
   id: string;
   business_id: string;

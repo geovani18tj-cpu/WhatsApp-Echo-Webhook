@@ -25,7 +25,7 @@ Protected multi-business inbox automation with FAQ and private media replies.
 
 ## Where things live
 
-- `artifacts/api-server/src/index.ts` — Express API, shared Meta webhooks, image OCR escalation, protected admin routes, and the server-rendered FAQ corrections page.
+- `artifacts/api-server/src/index.ts` — Express API, shared Meta webhooks, image OCR escalation, protected admin routes, FAQ corrections, and the owner-only Claude drafting assistant.
 - `supabase/schema.sql` — source-of-truth database schema, including active FAQ controls and matched FAQ event references.
 - `supabase/demo_seed.sql` — optional non-secret dual-channel demo business, FAQs, media metadata, and WhatsApp/Instagram threads used by `/demo`.
 - `lib/api-spec/openapi.yaml` — JSON API contract used to generate shared clients.

@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AssistantDraftResponse,
+  AssistantMessageInput,
   Business,
   BusinessFactInput,
   BusinessInput,
@@ -609,6 +611,72 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getDisableFaqMutationOptions(options));
+    }
+
+export const getDraftBusinessAssistantProposalsUrl = (businessId: string,) => {
+
+
+
+
+  return `/api/businesses/${businessId}/assistant/messages`
+}
+
+export const draftBusinessAssistantProposals = async (businessId: string,
+    assistantMessageInput: AssistantMessageInput, options?: Parameters<typeof customFetch>[1]): Promise<AssistantDraftResponse> => {
+
+  return customFetch<AssistantDraftResponse>(getDraftBusinessAssistantProposalsUrl(businessId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(assistantMessageInput)
+  }
+);}
+
+
+
+
+
+export const getDraftBusinessAssistantProposalsMutationOptions = <TError = ErrorType<ErrorStatus>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftBusinessAssistantProposals>>, TError,{businessId: string;data: BodyType<AssistantMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof draftBusinessAssistantProposals>>, TError,{businessId: string;data: BodyType<AssistantMessageInput>}, TContext> => {
+
+const mutationKey = ['draftBusinessAssistantProposals'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof draftBusinessAssistantProposals>>, {businessId: string;data: BodyType<AssistantMessageInput>}> = (props) => {
+          const {businessId,data} = props ?? {};
+
+          return  draftBusinessAssistantProposals(businessId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DraftBusinessAssistantProposalsMutationResult = NonNullable<Awaited<ReturnType<typeof draftBusinessAssistantProposals>>>
+    export type DraftBusinessAssistantProposalsMutationBody = BodyType<AssistantMessageInput>
+    export type DraftBusinessAssistantProposalsMutationError = ErrorType<ErrorStatus>
+
+    export const useDraftBusinessAssistantProposals = <TError = ErrorType<ErrorStatus>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftBusinessAssistantProposals>>, TError,{businessId: string;data: BodyType<AssistantMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof draftBusinessAssistantProposals>>,
+        TError,
+        {businessId: string;data: BodyType<AssistantMessageInput>},
+        TContext
+      > => {
+      return useMutation(getDraftBusinessAssistantProposalsMutationOptions(options));
     }
 
 export const getListMediaUrl = (businessId: string,) => {

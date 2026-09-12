@@ -1,6 +1,7 @@
 import express, { type Request, type Response } from "express";
 import crypto from "node:crypto";
 import { ReplitConnectors } from "@replit/connectors-sdk";
+import Anthropic from "@anthropic-ai/sdk";
 import { createWorker } from "tesseract.js";
 
 const app = express();
@@ -119,6 +120,77 @@ function requireAdmin(request: Request, response: Response): boolean {
 function getQueryString(request: Request, key: string): string | undefined {
   const value = request.query[key];
   return typeof value === "string" ? value : undefined;
+}
+
+type AssistantHistoryMessage = { role: "user" | "assistant"; content: string };
+type AssistantFaqDraft = { id: string; type: "faq"; question: string; answer: string; triggers: string[] };
+type AssistantMediaDraft = { id: string; type: "media"; label: string; triggers: string[] };
+type AssistantDraft = AssistantFaqDraft | AssistantMediaDraft;
+
+function assistantHistory(value: unknown): AssistantHistoryMessage[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(-12).flatMap((item) => {
+    if (!isRecord(item)) return [];
+    const role = item.role === "user" || item.role === "assistant" ? item.role : undefined;
+    const content = stringValue(item.content)?.slice(0, 4000);
+    return role && content ? [{ role, content }] : [];
+  });
+}
+
+function parseAssistantOutput(text: string): { reply: string; proposals: AssistantDraft[] } {
+  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  const parsed = JSON.parse(cleaned) as unknown;
+  if (!isRecord(parsed)) throw new Error("Claude returned an invalid draft response");
+  const reply = stringValue(parsed.reply);
+  if (!reply) throw new Error("Claude returned no conversational reply");
+  const proposals: AssistantDraft[] = [];
+  if (Array.isArray(parsed.proposals)) {
+    for (const raw of parsed.proposals.slice(0, 8)) {
+      if (!isRecord(raw)) continue;
+      const triggers = arrayStrings(raw.triggers).slice(0, 12);
+      if (raw.type === "faq") {
+        const question = stringValue(raw.question)?.slice(0, 500);
+        const answer = stringValue(raw.answer)?.slice(0, 2000);
+        if (question && answer && triggers.length) proposals.push({ id: crypto.randomUUID(), type: "faq", question, answer, triggers });
+      } else if (raw.type === "media") {
+        const label = stringValue(raw.label)?.slice(0, 300);
+        if (label && triggers.length) proposals.push({ id: crypto.randomUUID(), type: "media", label, triggers });
+      }
+    }
+  }
+  return { reply: reply.slice(0, 4000), proposals };
+}
+
+async function draftBusinessProposals(message: string, history: AssistantHistoryMessage[]): Promise<{ reply: string; proposals: AssistantDraft[] }> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not configured");
+  const client = new Anthropic({ apiKey });
+  const result = await client.messages.create({
+    model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-5",
+    max_tokens: 8192,
+    system: `You help a small-business owner turn their own descriptions into drafts they can review.
+Return ONLY valid JSON with this exact top-level shape:
+{"reply":"short conversational response","proposals":[]}
+
+Allowed proposal shapes:
+{"type":"faq","question":"customer-style question","answer":"answer based only on the owner's words","triggers":["phrase","patois variation if appropriate"]}
+{"type":"media","label":"clear owner-facing media label","triggers":["phrase customers might use"]}
+
+Rules:
+- Focus on concrete facts in the owner's newest message. Recent history is context only.
+- Never invent hours, locations, prices, availability, policies, products, contact details, or promises.
+- Draft separate FAQ proposals when one message contains multiple distinct facts.
+- Propose media only when the owner describes a document or image customers should receive, such as a menu or price list.
+- If the newest message is not concrete enough, return an empty proposals array and ask one useful clarifying question in reply.
+- Every proposal is an unapproved draft. Never imply that it was saved, activated, published, or will be sent to customers.
+- Keep FAQ answers concise and use the owner's wording and tone where practical.`,
+    messages: [
+      ...history.map((item) => ({ role: item.role, content: item.content })),
+      { role: "user" as const, content: message },
+    ],
+  });
+  const text = result.content.filter((block) => block.type === "text").map((block) => block.text).join("\n");
+  return parseAssistantOutput(text);
 }
 
 function allowedBusinessFields(input: Row, includeSecrets: boolean): Row {
@@ -449,6 +521,54 @@ app.get(["/admin", "/api/admin"], (request, response) => {
   response.redirect(token ? `/?admin=1&token=${encodeURIComponent(token)}` : "/?admin=1");
 });
 
+app.get("/admin/:businessId/assistant", (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const businessIdJson = JSON.stringify(request.params.businessId).replace(/</g, "\\u003c");
+  response.type("html").send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Business drafting assistant</title><style>
+    *{box-sizing:border-box}body{margin:0;background:#f5f2eb;color:#18352d;font:15px/1.5 Inter,ui-sans-serif,system-ui,sans-serif}.page{max-width:900px;margin:auto;padding:42px 18px 70px}.eyebrow{color:#218363;font-size:12px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}h1{font-size:clamp(30px,5vw,48px);line-height:1.05;letter-spacing:-.035em;margin:10px 0}.intro{color:#66736d;max-width:700px;margin:0 0 26px}
+    .chat{background:#fff;border:1px solid #ded9cf;border-radius:20px;overflow:hidden;box-shadow:0 16px 44px #34534712}.history{min-height:350px;max-height:58vh;overflow:auto;padding:22px;background:#faf9f6}.message{max-width:78%;margin:0 0 14px}.message.owner{margin-left:auto}.bubble{padding:12px 15px;border:1px solid #ded9cf;border-radius:15px;background:#fff}.owner .bubble{background:#dff3e9;border-color:#c6e4d6}.composer{display:flex;gap:10px;padding:15px;border-top:1px solid #e8e2d8}.composer input{flex:1;border:1px solid #d7d0c5;border-radius:12px;padding:13px;font:inherit}.composer button,.save{border:0;border-radius:10px;background:#218363;color:#fff;padding:11px 16px;font-weight:750;cursor:pointer}.composer button:disabled,.save:disabled{background:#9aa39f;cursor:default}
+    .proposals{display:grid;gap:12px;margin:12px 0 20px}.proposal{background:#fff;border:1px solid #dcd5ca;border-radius:14px;padding:15px}.proposal h3{margin:0 0 9px;font-size:16px}.proposal p{margin:6px 0}.tag{display:inline-block;background:#eef3ef;border-radius:999px;padding:3px 8px;margin:3px 3px 3px 0;font-size:12px}.proposal .note{color:#7c837f;font-size:12px}.file-input{display:block;margin:10px 0;width:100%}.status{font-size:13px;color:#218363;margin-left:8px}
+    @media(max-width:600px){.page{padding:26px 10px}.message{max-width:92%}.composer{align-items:stretch;flex-direction:column}}
+  </style></head><body><main class="page"><div class="eyebrow">Owner-only drafting aid</div><h1>Describe your business</h1><p class="intro">Tell Claude how your business works. Nothing becomes customer-facing until you click Save on that specific draft.</p><section class="chat"><div id="history" class="history"></div><form id="composer" class="composer"><input id="message" maxlength="4000" autocomplete="off" placeholder="We're open Mon–Sat 8–5, closed Sundays…" required><button id="send" type="submit">Send</button></form></section></main><script>
+    const businessId=${businessIdJson};
+    const token=new URLSearchParams(location.search).get("token")||"";
+    const history=[];
+    const historyEl=document.getElementById("history");
+    const composer=document.getElementById("composer");
+    const input=document.getElementById("message");
+    const send=document.getElementById("send");
+    function addMessage(role,content,proposals=[]){
+      history.push({role,content});
+      const wrapper=document.createElement("div");wrapper.className="message "+(role==="user"?"owner":"assistant");
+      const bubble=document.createElement("div");bubble.className="bubble";bubble.textContent=content;wrapper.appendChild(bubble);
+      historyEl.appendChild(wrapper);
+      if(proposals.length){const list=document.createElement("div");list.className="proposals";proposals.forEach(p=>list.appendChild(proposalCard(p)));historyEl.appendChild(list)}
+      historyEl.scrollTop=historyEl.scrollHeight;
+    }
+    function line(label,value){const p=document.createElement("p");const strong=document.createElement("strong");strong.textContent=label+": ";p.append(strong,document.createTextNode(value));return p}
+    function proposalCard(proposal){
+      const card=document.createElement("article");card.className="proposal";const title=document.createElement("h3");title.textContent=proposal.type==="faq"?"Draft FAQ":"Draft media item";card.appendChild(title);
+      if(proposal.type==="faq"){card.append(line("Question",proposal.question),line("Answer",proposal.answer))}
+      else{card.append(line("Label",proposal.label));const file=document.createElement("input");file.type="file";file.accept=".pdf,image/*";file.className="file-input";card.appendChild(file)}
+      const tags=document.createElement("div");proposal.triggers.forEach(t=>{const tag=document.createElement("span");tag.className="tag";tag.textContent=t;tags.appendChild(tag)});card.appendChild(tags);
+      const note=document.createElement("p");note.className="note";note.textContent="Draft only — review this item before saving.";card.appendChild(note);
+      const button=document.createElement("button");button.className="save";button.type="button";button.textContent="Save";const status=document.createElement("span");status.className="status";card.append(button,status);
+      button.addEventListener("click",async()=>{button.disabled=true;status.textContent="Saving…";try{
+        let response;
+        if(proposal.type==="faq"){response=await fetch("/api/businesses/"+encodeURIComponent(businessId)+"/faqs?token="+encodeURIComponent(token),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:proposal.question,answer:proposal.answer,triggers:proposal.triggers})})}
+        else{const file=card.querySelector('input[type="file"]').files[0];if(!file)throw new Error("Choose a PDF or image before saving.");const form=new FormData();form.append("label",proposal.label);form.append("triggers",proposal.triggers.join(", "));form.append("file",file);response=await fetch("/api/businesses/"+encodeURIComponent(businessId)+"/media?token="+encodeURIComponent(token),{method:"POST",body:form})}
+        const body=await response.json().catch(()=>({}));if(!response.ok)throw new Error(body.error||"Could not save this draft.");button.textContent="Saved";status.textContent="Owner approved";
+      }catch(error){button.disabled=false;status.textContent=error instanceof Error?error.message:"Could not save";}});
+      return card;
+    }
+    addMessage("assistant","Tell me about your hours, delivery areas, payment methods, policies, or customer documents. I’ll turn concrete details into drafts for you to review.");
+    composer.addEventListener("submit",async(event)=>{event.preventDefault();const message=input.value.trim();if(!message)return;const recent=history.slice(-12);addMessage("user",message);input.value="";send.disabled=true;try{
+      const response=await fetch("/api/businesses/"+encodeURIComponent(businessId)+"/assistant/messages?token="+encodeURIComponent(token),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message,history:recent})});
+      const body=await response.json().catch(()=>({}));if(!response.ok)throw new Error(body.error||"Assistant request failed.");addMessage("assistant",body.reply,Array.isArray(body.proposals)?body.proposals:[]);
+    }catch(error){addMessage("assistant",error instanceof Error?error.message:"Assistant request failed.");}finally{send.disabled=false;input.focus()}});
+  </script></body></html>`);
+});
+
 app.get(["/health", "/api/health", "/api/healthz"], async (_request, response) => {
   const result: Row = { ok: true, status: "ok", database: "unknown" };
   if (!process.env.META_APP_SECRET) result.warning = "META_APP_SECRET is not configured; webhook signature verification is disabled";
@@ -558,6 +678,23 @@ app.post("/api/businesses/:businessId/faqs", (request, response) => {
   if (!question || !answer) { response.status(400).json({ error: "Question and answer are required" }); return; }
   void supabase<Row[]>("/rest/v1/faqs", { method: "POST", body: JSON.stringify({ business_id: request.params.businessId, question, answer, triggers: arrayStrings(input.triggers) }) })
     .then((rows) => response.status(201).json(rows[0])).catch((error) => response.status(400).json({ error: errorMessage(error) }));
+});
+
+app.post("/api/businesses/:businessId/assistant/messages", async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const input = isRecord(request.body) ? request.body : {};
+  const message = stringValue(input.message)?.slice(0, 4000);
+  if (!message) {
+    response.status(400).json({ error: "A message is required" });
+    return;
+  }
+  try {
+    const result = await draftBusinessProposals(message, assistantHistory(input.history));
+    response.json(result);
+  } catch (error) {
+    log("business assistant request failed", { businessId: request.params.businessId, error: errorMessage(error) });
+    response.status(502).json({ error: errorMessage(error) });
+  }
 });
 
 app.delete("/api/businesses/:businessId/faqs/:faqId", (request, response) => {

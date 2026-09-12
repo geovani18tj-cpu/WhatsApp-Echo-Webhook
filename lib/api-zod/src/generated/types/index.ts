@@ -6,6 +6,14 @@
  * OpenAPI spec version: 0.2.0
  */
 
+export * from './assistantDraftResponse';
+export * from './assistantFaqDraft';
+export * from './assistantFaqDraftType';
+export * from './assistantHistoryMessage';
+export * from './assistantHistoryMessageRole';
+export * from './assistantMediaDraft';
+export * from './assistantMediaDraftType';
+export * from './assistantMessageInput';
 export * from './business';
 export * from './businessFactInput';
 export * from './businessInput';

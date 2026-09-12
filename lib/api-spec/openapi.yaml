@@ -121,6 +121,23 @@ paths:
           content:
             application/json: { schema: { $ref: "#/components/schemas/Faq" } }
         "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/ErrorStatus" } } } }
+  /businesses/{businessId}/assistant/messages:
+    post:
+      operationId: draftBusinessAssistantProposals
+      tags: [business]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/BusinessId" }
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/AssistantMessageInput" } }
+      responses:
+        "200":
+          description: Conversational reply and owner-reviewable drafts
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/AssistantDraftResponse" } }
+        "400": { description: Invalid input, content: { application/json: { schema: { $ref: "#/components/schemas/ErrorStatus" } } } }
   /businesses/{businessId}/media:
     get:
       operationId: listMedia
@@ -267,6 +284,49 @@ components:
         question: { type: string, minLength: 1 }
         answer: { type: string, minLength: 1 }
         triggers: { type: array, items: { type: string } }
+    AssistantHistoryMessage:
+      type: object
+      required: [role, content]
+      properties:
+        role: { type: string, enum: [user, assistant] }
+        content: { type: string, minLength: 1, maxLength: 4000 }
+    AssistantMessageInput:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string, minLength: 1, maxLength: 4000 }
+        history:
+          type: array
+          maxItems: 12
+          items: { $ref: "#/components/schemas/AssistantHistoryMessage" }
+    AssistantFaqDraft:
+      type: object
+      required: [id, type, question, answer, triggers]
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [faq] }
+        question: { type: string }
+        answer: { type: string }
+        triggers: { type: array, items: { type: string } }
+    AssistantMediaDraft:
+      type: object
+      required: [id, type, label, triggers]
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [media] }
+        label: { type: string }
+        triggers: { type: array, items: { type: string } }
+    AssistantDraftResponse:
+      type: object
+      required: [reply, proposals]
+      properties:
+        reply: { type: string }
+        proposals:
+          type: array
+          items:
+            oneOf:
+              - { $ref: "#/components/schemas/AssistantFaqDraft" }
+              - { $ref: "#/components/schemas/AssistantMediaDraft" }
     MediaItem:
       type: object
       required: [id, business_id, label, filename, content_type, size_bytes, triggers, created_at]
