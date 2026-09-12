@@ -6,9 +6,10 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface HealthStatus {
-  status: string;
-  ok?: boolean;
-  warning?: string;
-  database?: string;
+export interface FaqInput {
+  /** @minLength 1 */
+  question: string;
+  /** @minLength 1 */
+  answer: string;
+  triggers?: string[];
 }

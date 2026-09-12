@@ -6,9 +6,4 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface HealthStatus {
-  status: string;
-  ok?: boolean;
-  warning?: string;
-  database?: string;
-}
+export type DashboardRecentEventsItem = { [key: string]: unknown };

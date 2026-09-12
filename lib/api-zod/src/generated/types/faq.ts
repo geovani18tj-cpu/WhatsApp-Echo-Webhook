@@ -6,9 +6,11 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface HealthStatus {
-  status: string;
-  ok?: boolean;
-  warning?: string;
-  database?: string;
+export interface Faq {
+  id: string;
+  business_id: string;
+  question: string;
+  answer: string;
+  triggers: string[];
+  created_at: string;
 }

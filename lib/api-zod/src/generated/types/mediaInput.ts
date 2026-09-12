@@ -6,9 +6,10 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface HealthStatus {
-  status: string;
-  ok?: boolean;
-  warning?: string;
-  database?: string;
+export interface MediaInput {
+  label: string;
+  filename: string;
+  content_type: string;
+  size_bytes: number;
+  triggers?: string[];
 }

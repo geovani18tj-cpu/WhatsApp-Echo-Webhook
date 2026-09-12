@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import Home from '@/pages/home';
+import Admin from '@/pages/admin';
 import {
   Route,
   Switch,
@@ -15,10 +16,16 @@ import {
 const queryClient = new QueryClient();
 
 function Router() {
+  const [location] = useLocation();
+  if (location === '/' && new URLSearchParams(window.location.search).get('admin') === '1') {
+    return <RoutedErrorBoundary><Admin /></RoutedErrorBoundary>;
+  }
   return (
     <RoutedErrorBoundary>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/demo" component={Home} />
+        <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>

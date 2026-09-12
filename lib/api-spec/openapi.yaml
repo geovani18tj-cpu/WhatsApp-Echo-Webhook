@@ -1,84 +1,289 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
-  description: API specification
+  version: 0.2.0
+  description: Likkle Table WhatsApp and Instagram command-centre API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
   - name: business
-    description: WhatsApp business administration
+  - name: faq
+  - name: media
+  - name: dashboard
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
-          description: Healthy
+          description: Health status
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
-  /facts:
-    post:
-      operationId: saveBusinessFact
+  /businesses:
+    get:
+      operationId: listBusinesses
       tags: [business]
-      summary: Save a business fact
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Businesses
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Business" }
+    post:
+      operationId: createBusiness
+      tags: [business]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/BusinessInput" } }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/Business" } }
+        "400": { description: Invalid input, content: { application/json: { schema: { $ref: "#/components/schemas/ErrorStatus" } } } }
+  /businesses/{businessId}:
+    patch:
+      operationId: updateBusiness
+      tags: [business]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/BusinessId" }
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/BusinessUpdate" } }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/Business" } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/ErrorStatus" } } } }
+  /businesses/{businessId}/faqs:
+    get:
+      operationId: listFaqs
+      tags: [faq]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/BusinessId" }
+      responses:
+        "200":
+          description: FAQs
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Faq" } }
+    post:
+      operationId: createFaq
+      tags: [faq]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/BusinessId" }
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/FaqInput" } }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/Faq" } }
+  /businesses/{businessId}/faqs/{faqId}:
+    delete:
+      operationId: deleteFaq
+      tags: [faq]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/BusinessId" }
+        - { name: faqId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Deleted }
+  /businesses/{businessId}/media:
+    get:
+      operationId: listMedia
+      tags: [media]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/BusinessId" }
+      responses:
+        "200":
+          description: Media metadata
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/MediaItem" } }
+    post:
+      operationId: uploadMedia
+      tags: [media]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/BusinessId" }
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              $ref: "#/components/schemas/BusinessFactInput"
+            schema: { $ref: "#/components/schemas/MediaInput" }
+      responses:
+        "201":
+          description: Uploaded media metadata
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/MediaItem" } }
+  /businesses/{businessId}/media/{mediaId}:
+    delete:
+      operationId: deleteMedia
+      tags: [media]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/BusinessId" }
+        - { name: mediaId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Deleted }
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/Dashboard" } }
+  /facts:
+    post:
+      operationId: saveBusinessFact
+      tags: [business]
+      summary: Legacy demo fact endpoint
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/BusinessFactInput" } }
       responses:
         "200":
           description: Fact accepted
           content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SuccessStatus"
-        "400":
-          description: Invalid fact
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorStatus"
+            application/json: { schema: { $ref: "#/components/schemas/SuccessStatus" } }
+        "400": { description: Invalid fact, content: { application/json: { schema: { $ref: "#/components/schemas/ErrorStatus" } } } }
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    BusinessId:
+      name: businessId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
-        status:
-          type: string
-      required:
-        - status
+        status: { type: string }
+        ok: { type: boolean }
+        warning: { type: string }
+        database: { type: string }
     SuccessStatus:
       type: object
-      properties:
-        ok:
-          type: boolean
       required: [ok]
+      properties: { ok: { type: boolean } }
     ErrorStatus:
       type: object
-      properties:
-        error:
-          type: string
       required: [error]
-    BusinessFactInput:
+      properties: { error: { type: string } }
+    Business:
+      type: object
+      required: [id, name, timezone, digest_hour, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        phone_number_id: { type: ["string", "null"] }
+        owner_whatsapp_number: { type: ["string", "null"] }
+        instagram_user_id: { type: ["string", "null"] }
+        timezone: { type: string }
+        digest_hour: { type: integer }
+        created_at: { type: string }
+        updated_at: { type: string }
+    BusinessInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        phone_number_id: { type: string }
+        whatsapp_access_token: { type: string }
+        owner_whatsapp_number: { type: string }
+        instagram_user_id: { type: string }
+        instagram_page_token: { type: string }
+        timezone: { type: string }
+        digest_hour: { type: integer, minimum: 0, maximum: 23 }
+    BusinessUpdate:
       type: object
       properties:
-        key:
-          type: string
-          minLength: 1
-        value:
-          type: string
-          minLength: 1
+        name: { type: string, minLength: 1 }
+        phone_number_id: { type: string }
+        whatsapp_access_token: { type: string }
+        owner_whatsapp_number: { type: string }
+        instagram_user_id: { type: string }
+        instagram_page_token: { type: string }
+        timezone: { type: string }
+        digest_hour: { type: integer, minimum: 0, maximum: 23 }
+    Faq:
+      type: object
+      required: [id, business_id, question, answer, triggers, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        business_id: { type: string, format: uuid }
+        question: { type: string }
+        answer: { type: string }
+        triggers: { type: array, items: { type: string } }
+        created_at: { type: string }
+    FaqInput:
+      type: object
+      required: [question, answer]
+      properties:
+        question: { type: string, minLength: 1 }
+        answer: { type: string, minLength: 1 }
+        triggers: { type: array, items: { type: string } }
+    MediaItem:
+      type: object
+      required: [id, business_id, label, filename, content_type, size_bytes, triggers, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        business_id: { type: string, format: uuid }
+        label: { type: string }
+        filename: { type: string }
+        content_type: { type: string }
+        size_bytes: { type: integer }
+        triggers: { type: array, items: { type: string } }
+        created_at: { type: string }
+    MediaInput:
+      type: object
+      required: [label, filename, content_type, size_bytes]
+      properties:
+        label: { type: string }
+        filename: { type: string }
+        content_type: { type: string }
+        size_bytes: { type: integer }
+        triggers: { type: array, items: { type: string } }
+    Dashboard:
+      type: object
+      required: [businesses, inbound_count, outbound_count, recent_events]
+      properties:
+        businesses: { type: integer }
+        inbound_count: { type: integer }
+        outbound_count: { type: integer }
+        recent_events: { type: array, items: { type: object, additionalProperties: true } }
+    BusinessFactInput:
+      type: object
       required: [key, value]
-
+      properties:
+        key: { type: string, minLength: 1 }
+        value: { type: string, minLength: 1 }
