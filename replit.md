@@ -1,4 +1,4 @@
-# Likkle Table WhatsApp + Instagram command centre
+# Delegate — WhatsApp + Instagram inbox
 
 Protected multi-business inbox automation with FAQ and private media replies.
 

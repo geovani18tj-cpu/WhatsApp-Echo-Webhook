@@ -1,0 +1,14 @@
+The product's brand is Delegate, and the AI assistant is Del. "Likkle Table" is NOT the brand — it is only the example business used for demo data, so it should appear only after login, as the name of the business that's logged in. Fix every place the product itself is called "Likkle Table":
+
+artifacts/whatsapp-business/src/pages/landing.tsx — logo wordmark, hero copy, the "how it works" step descriptions, and the footer copyright all say Likkle Table → change to Delegate. (Keep "Del" in the "Del takes the repeat questions" step — that's correct.)
+artifacts/whatsapp-business/src/pages/login.tsx — "New to Likkle Table?" → "New to Delegate?", and the logo wordmark → Delegate.
+artifacts/whatsapp-business/src/pages/home.tsx — the header wordmark next to the logo (around line 433) → "Delegate". But the two connection-status lines ("WhatsApp · Likkle Table connected" and "Instagram · @likkletable connected") are about the logged-in business, so leave them as Likkle Table — better still, render them from the business's name/handle rather than hardcoding, so a real customer sees their own business there.
+artifacts/whatsapp-business/src/pages/admin.tsx — "Likkle Table · Admin" and "Likkle Table · Protected admin" → "Delegate · Admin" / "Delegate · Protected admin".
+artifacts/mockup-sandbox/src/components/mockups/whatsapp-business/Experience.tsx — same wordmark/footer fix.
+lib/api-spec/openapi.yaml line 5 — description → "Delegate WhatsApp and Instagram inbox API", then re-run the Orval codegen so every generated file under lib/api-zod and lib/api-client-react picks up the new header comment.
+replit.md title → "Delegate — WhatsApp + Instagram inbox", and supabase/schema.sql line 1 comment → "Delegate".
+Leave supabase/demo_seed.sql alone — "Likkle Table Demo" and its price-list filename are the example business, which is exactly right.
+Create one shared src/components/logo.tsx component (mark + "Delegate" wordmark, with a size and a light prop for dark backgrounds) and use it in landing, login, home header, and admin, so the logo lives in one place. For now keep the current green rounded-square + message-circle mark inside it — I'll supply the final SVG mark next, and it should only need to change in that one file.
+Any customer-facing text that names the assistant should say "Del" and introduce it as the business's AI assistant, never as a person.
+
+After the change, grep -ri "likkle" --include=*.ts --include=*.tsx --include=*.md --include=*.yaml . should only return hits in supabase/demo_seed.sql and the two business-status lines in home.tsx.

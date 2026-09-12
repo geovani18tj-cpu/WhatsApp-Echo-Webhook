@@ -1,4 +1,4 @@
--- Likkle Table: run this script in the Supabase SQL editor.
+-- Delegate: run this script in the Supabase SQL editor.
 -- It is safe to run repeatedly. Secrets are intentionally never stored in this file.
 
 create extension if not exists pgcrypto;

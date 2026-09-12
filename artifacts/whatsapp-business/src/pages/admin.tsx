@@ -16,6 +16,7 @@ import {
   setAuthTokenGetter,
   type Business,
 } from "@workspace/api-client-react";
+import { Logo } from "@/components/logo";
 
 type Notice = { kind: "error" | "success"; text: string } | null;
 
@@ -112,7 +113,10 @@ export default function Admin() {
   if (!ready) return (
     <main className="min-h-[100dvh] bg-[#f7f2ec] px-5 py-12 text-[#263c31]">
       <div className="mx-auto max-w-md rounded-3xl border border-[#e5dbd1] bg-[#fffdfa] p-8 shadow-[0_16px_42px_rgba(73,60,46,0.08)]">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#2a7a5d]">Likkle Table · Admin</p>
+        <div className="flex items-center justify-between gap-4">
+          <Logo />
+          <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#2a7a5d]">· Admin</span>
+        </div>
         <h1 className="mt-3 font-['Space_Grotesk'] text-3xl font-bold tracking-[-0.06em]">Connect your business</h1>
         <p className="mt-3 text-sm leading-6 text-[#777b75]">Enter the admin token for this session. It is held in memory only and channel tokens are never saved in this browser.</p>
         <form className="mt-7 space-y-3" onSubmit={(event) => { event.preventDefault(); setToken(tokenDraft.trim()); }}>
@@ -127,7 +131,7 @@ export default function Admin() {
     <main className="min-h-[100dvh] bg-[#f7f2ec] px-4 py-6 text-[#263c31] sm:px-6 lg:px-10">
       <div className="mx-auto max-w-7xl">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#2a7a5d]">Likkle Table · Protected admin</p><h1 className="mt-2 font-['Space_Grotesk'] text-4xl font-bold tracking-[-0.07em]">Business setup</h1><p className="mt-2 text-sm text-[#777b75]">Configure WhatsApp and Instagram without exposing credentials in list views.</p></div>
+          <div><div className="flex items-center gap-3"><Logo size="sm" /><span className="text-xs font-bold uppercase tracking-[0.16em] text-[#2a7a5d]">· Protected admin</span></div><h1 className="mt-2 font-['Space_Grotesk'] text-4xl font-bold tracking-[-0.07em]">Business setup</h1><p className="mt-2 text-sm text-[#777b75]">Configure WhatsApp and Instagram without exposing credentials in list views.</p></div>
           <button data-testid="btn-admin-lock" className="rounded-xl border border-[#d8cec3] bg-[#fffdfa] px-4 py-2 text-xs font-bold text-[#53665b]" onClick={() => setToken("")}>Lock session</button>
         </header>
         {notice && <div data-testid="admin-notice" className={`mb-5 rounded-xl px-4 py-3 text-sm ${notice.kind === "error" ? "bg-[#fff0eb] text-[#a64a2b]" : "bg-[#eaf6ee] text-[#2b775c]"}`}>{notice.text}</div>}

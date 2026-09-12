@@ -9,6 +9,7 @@ import {
   useSaveBusinessFact,
 } from "@workspace/api-client-react";
 import { DraftStudio } from "@/components/draft-studio";
+import { Logo } from "@/components/logo";
 
 type Conversation = {
   id: string;
@@ -266,7 +267,7 @@ function MediaPanel({ setSavedNotice }: { setSavedNotice: (s: string) => void })
     <div className="flex flex-col h-full bg-[#fffdfa] rounded-2xl border border-[#e5dbd1] shadow-[0_10px_32px_rgba(73,60,46,0.05)] overflow-hidden">
        <div className="p-5 border-b border-[#eee7df]">
          <h2 className="font-['Space_Grotesk'] text-lg font-bold tracking-[-0.04em] text-[#293d33]">Media Library</h2>
-         <p className="text-xs text-[#85847d] mt-1">Upload menus, maps, and guides for the assistant to share.</p>
+         <p className="text-xs text-[#85847d] mt-1">Upload menus, maps, and guides for Del, your business's AI assistant, to share.</p>
        </div>
        <div className="p-5 flex-1 wa-scroll overflow-y-auto space-y-5">
          <form onSubmit={onSubmit} className="bg-[#f6f0e8] p-4 rounded-xl border border-[#e2dbd3] space-y-3" data-testid="form-upload-media">
@@ -322,7 +323,7 @@ function KnowledgePanel({ setSavedNotice }: { setSavedNotice: (s: string) => voi
        <div className="p-5 border-b border-[#eee7df] flex justify-between items-center">
          <div>
            <h2 className="font-['Space_Grotesk'] text-lg font-bold tracking-[-0.04em] text-[#293d33]">Knowledge Base</h2>
-           <p className="text-xs text-[#85847d] mt-1">Facts the assistant uses to answer questions reliably.</p>
+           <p className="text-xs text-[#85847d] mt-1">Facts Del uses to answer questions reliably.</p>
          </div>
          <span className="flex items-center gap-1.5 text-[10px] font-semibold text-[#478162] bg-[#eef7f0] px-2.5 py-1.5 rounded-full"><span className="h-1.5 w-1.5 rounded-full bg-[#58a879]" /> {facts.length} active facts</span>
        </div>
@@ -425,14 +426,7 @@ export default function Home() {
       <div className="min-h-[100dvh] bg-background font-['DM_Sans',ui-sans-serif,system-ui,sans-serif] text-foreground">
         <header className="sticky top-0 z-30 border-b border-[#e7ddd2] bg-[#fffdfa]/95 backdrop-blur-xl">
           <div className="mx-auto flex max-w-[1480px] flex-wrap items-center justify-between gap-3 px-5 py-3 lg:px-8">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-[13px] bg-[#1c775b] text-white shadow-[0_6px_16px_rgba(28,119,91,0.22)]">
-                <MessageCircle size={21} fill="currentColor" strokeWidth={1.5} />
-              </div>
-              <div>
-                <p className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[15px] font-bold tracking-[-0.03em] text-[#1c382d]">Likkle Table</p>
-              </div>
-            </div>
+            <Logo />
             <nav className="order-last flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-[#f4eee8] p-1 md:order-none md:w-auto" aria-label="Primary">
               {["Inbox", "Del", "Knowledge", "Media", "Activity"].map((item) => (
                 <button key={item} data-testid={`nav-tab-${item}`} onClick={() => setActiveNav(item)} className={`whitespace-nowrap rounded-lg px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68] ${activeNav === item ? "bg-[#fffdfa] text-[#176b52] shadow-sm" : "text-[#88847e] hover:text-[#38584b]"}`}>
@@ -654,8 +648,8 @@ export default function Home() {
           <section className="wa-rise mt-5" style={{ animationDelay: "140ms" }}>
             <div className="rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] p-5 shadow-[0_10px_32px_rgba(73,60,46,0.04)] sm:p-6">
               <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
-                <div><p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Trust controls</p><h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.04em] text-[#2b4035]">Keep the human in the loop.</h2><p className="mt-1 max-w-md text-xs leading-5 text-[#85847d]">The assistant can draft replies from your knowledge. You decide what leaves the front desk.</p></div>
-                <button onClick={() => setAutoReply((enabled) => !enabled)} className={`relative h-7 w-12 shrink-0 rounded-full p-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68] ${autoReply ? "bg-[#23815f]" : "bg-[#cbc7c0]"}`} aria-label={autoReply ? "Turn assistant off" : "Turn assistant on"} data-testid="switch-auto-reply"><span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${autoReply ? "translate-x-5" : "translate-x-0"}`} /></button>
+                <div><p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Trust controls</p><h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.04em] text-[#2b4035]">Keep the human in the loop.</h2><p className="mt-1 max-w-md text-xs leading-5 text-[#85847d]">Del, your business's AI assistant, can draft replies from your knowledge. You decide what leaves the front desk.</p></div>
+                <button onClick={() => setAutoReply((enabled) => !enabled)} className={`relative h-7 w-12 shrink-0 rounded-full p-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68] ${autoReply ? "bg-[#23815f]" : "bg-[#cbc7c0]"}`} aria-label={autoReply ? "Turn Del off" : "Turn Del on"} data-testid="switch-auto-reply"><span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${autoReply ? "translate-x-5" : "translate-x-0"}`} /></button>
               </div>
               <div className="grid gap-2 sm:grid-cols-3">
                 {[

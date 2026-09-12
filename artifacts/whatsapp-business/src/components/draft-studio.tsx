@@ -26,11 +26,11 @@ export function DraftStudio({ setSavedNotice }: { setSavedNotice: (s: string) =>
   
   const [messages, setMessages] = useState<Message[]>(
     !token ? [
-      { role: "assistant", content: "Hi! I'm Del. I can help you translate plain-language business updates into structured FAQs and media items for your WhatsApp command centre." },
+      { role: "assistant", content: "Hi! I'm Del, your business's AI assistant. I can help you translate plain-language business updates into structured FAQs and media items for your Delegate inbox." },
       { role: "user", content: "We're open on Sundays now from 10am to 2pm." },
       { role: "assistant", content: "I've drafted a new FAQ for your Sunday hours. Review it on the right, then click Save if it is correct." }
     ] : [
-      { role: "assistant", content: "Hi! I'm Del, your AI knowledge assistant. Tell me what you would like to update about your business today." }
+      { role: "assistant", content: "Hi! I'm Del, your business's AI assistant. Tell me what you would like to update about your business today." }
     ]
   );
   
@@ -182,7 +182,7 @@ export function DraftStudio({ setSavedNotice }: { setSavedNotice: (s: string) =>
             </div>
             <div>
               <h2 className="font-['Space_Grotesk'] text-lg font-bold tracking-[-0.04em] text-[#293d33]">Del</h2>
-              <p className="text-xs text-[#85847d] mt-0.5">Your AI knowledge assistant</p>
+              <p className="text-xs text-[#85847d] mt-0.5">Your business's AI assistant</p>
             </div>
           </div>
           {!token && (
@@ -256,7 +256,7 @@ export function DraftStudio({ setSavedNotice }: { setSavedNotice: (s: string) =>
             <div className="h-full flex flex-col items-center justify-center text-center px-4 text-[#a39e96]">
               <FileText size={32} className="mb-3 text-[#d6d0c9]" />
               <p className="text-sm font-semibold text-[#68635c]">No pending drafts</p>
-              <p className="text-[11px] mt-1.5 leading-relaxed">When the assistant creates a new FAQ or media keyword, it will appear here for your approval.</p>
+              <p className="text-[11px] mt-1.5 leading-relaxed">When Del creates a new FAQ or media keyword, it will appear here for your approval.</p>
             </div>
           ) : (
             proposals.map(p => (

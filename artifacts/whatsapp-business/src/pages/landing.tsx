@@ -13,19 +13,7 @@ import {
   Menu,
   X
 } from "lucide-react";
-
-function Logo() {
-  return (
-    <Link href="/" className="flex items-center gap-3 relative z-50">
-      <div className="grid h-10 w-10 place-items-center rounded-[13px] bg-[#1c775b] text-white shadow-[0_6px_16px_rgba(28,119,91,0.22)]">
-        <MessageCircle size={21} fill="currentColor" strokeWidth={1.5} />
-      </div>
-      <div>
-        <p className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[15px] font-bold tracking-[-0.03em] text-[#1c382d]">Likkle Table</p>
-      </div>
-    </Link>
-  );
-}
+import { Logo } from "@/components/logo";
 
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -90,7 +78,7 @@ export default function Landing() {
                 Never miss another WhatsApp order.
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#59635e]">
-                Likkle Table auto-sends your price list, answers the questions you get every day, and only pings you for what actually needs you — on WhatsApp and Instagram, using the number and page you already have.
+                Delegate auto-sends your price list, answers the questions you get every day, and only pings you for what actually needs you — on WhatsApp and Instagram, using the number and page you already have.
               </p>
               
               <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -188,7 +176,7 @@ export default function Landing() {
               
               {[
                 { title: "Connect your number", desc: "Keep your existing WhatsApp Business number and Instagram page. Nothing changes for your customers." },
-                { title: "Load what you already know", desc: "Upload your price lists, delivery zones, and FAQs. Likkle Table builds a knowledge base from your existing documents." },
+                { title: "Load what you already know", desc: "Upload your price lists, delivery zones, and FAQs. Delegate builds a knowledge base from your existing documents." },
                 { title: "Del takes the repeat questions", desc: "Repeat questions are answered instantly, word for word how you'd say it, using only your approved facts." },
                 { title: "You get what's left", desc: "Anything uncertain goes to your phone, plus you receive a morning digest of what needs your attention." }
               ].map((step, i) => (
@@ -215,8 +203,8 @@ export default function Landing() {
             
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
               {[
-                { icon: FileText, title: "Media library", desc: "Upload PDFs, images, and price lists. The assistant automatically sends the right file when asked." },
-                { icon: ShieldCheck, title: "Approved answers only", desc: "No AI hallucinations. If the answer isn't in your Knowledge Base, the assistant hands it over to you." },
+                { icon: FileText, title: "Media library", desc: "Upload PDFs, images, and price lists. Del, your business's AI assistant, automatically sends the right file when asked." },
+                { icon: ShieldCheck, title: "Approved answers only", desc: "No AI hallucinations. If the answer isn't in your Knowledge Base, Del hands it over to you." },
                 { icon: Zap, title: "One-tap correction", desc: "Edit a generated response before it goes out, or quickly update a fact right from the chat." },
                 { icon: ImageIcon, title: "Photo reading", desc: "Reads the text in a customer's photo, but never confirms stock, pricing, or availability by itself." },
                 { icon: Clock, title: "Morning digest", desc: "Wake up to a clean summary of what happened overnight and which orders need to go out today." },
@@ -352,7 +340,7 @@ export default function Landing() {
               </div>
             </div>
           </div>
-          <p className="mt-10 border-t border-[#eee7df] pt-6 text-xs text-[#9a958e]">© 2026 Likkle Table. All rights reserved.</p>
+          <p className="mt-10 border-t border-[#eee7df] pt-6 text-xs text-[#9a958e]">© 2026 Delegate. All rights reserved.</p>
         </div>
       </footer>
     </div>

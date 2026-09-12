@@ -237,7 +237,7 @@ export function Experience() {
               <MessageCircle size={21} fill="currentColor" strokeWidth={1.5} />
             </div>
             <div>
-              <p className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[15px] font-bold tracking-[-0.03em] text-[#1c382d]">Likkle Table</p>
+              <p className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[15px] font-bold tracking-[-0.03em] text-[#1c382d]">Delegate</p>
               <p className="hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-[#a09990] sm:block">WhatsApp command centre</p>
             </div>
           </div>
@@ -378,8 +378,8 @@ export function Experience() {
         <section className="wa-rise mt-5 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]" style={{ animationDelay: "140ms" }}>
           <div className="rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] p-5 shadow-[0_10px_32px_rgba(73,60,46,0.04)] sm:p-6">
             <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
-              <div><p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Trust controls</p><h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.04em] text-[#2b4035]">Keep the human in the loop.</h2><p className="mt-1 max-w-md text-xs leading-5 text-[#85847d]">The assistant can draft replies from your knowledge. You decide what leaves the front desk.</p></div>
-              <button onClick={() => setAutoReply((enabled) => !enabled)} className={`relative h-7 w-12 shrink-0 rounded-full p-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68] ${autoReply ? "bg-[#23815f]" : "bg-[#cbc7c0]"}`} aria-label={autoReply ? "Turn assistant off" : "Turn assistant on"}><span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${autoReply ? "translate-x-5" : "translate-x-0"}`} /></button>
+              <div><p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Trust controls</p><h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.04em] text-[#2b4035]">Keep the human in the loop.</h2><p className="mt-1 max-w-md text-xs leading-5 text-[#85847d]">Del, your business's AI assistant, can draft replies from your knowledge. You decide what leaves the front desk.</p></div>
+              <button onClick={() => setAutoReply((enabled) => !enabled)} className={`relative h-7 w-12 shrink-0 rounded-full p-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68] ${autoReply ? "bg-[#23815f]" : "bg-[#cbc7c0]"}`} aria-label={autoReply ? "Turn Del off" : "Turn Del on"}><span className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${autoReply ? "translate-x-5" : "translate-x-0"}`} /></button>
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
               {[
@@ -399,13 +399,13 @@ export function Experience() {
         </section>
 
         <section className="wa-rise mt-5 rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] p-5 shadow-[0_10px_32px_rgba(73,60,46,0.04)] sm:p-6" style={{ animationDelay: "210ms" }}>
-          <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Media library</p><h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.04em] text-[#2b4035]">The things customers ask to see.</h2><p className="mt-1 text-xs text-[#85847d]">Files the assistant can confidently share when the words match.</p></div><button onClick={() => setSavedNotice("Upload flow opened")} className="flex w-fit items-center gap-2 rounded-xl bg-[#edf7f0] px-3.5 py-2.5 text-xs font-bold text-[#2e7559] transition hover:bg-[#e0f1e6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68]"><Plus size={14} /> Add media</button></div>
+          <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Media library</p><h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.04em] text-[#2b4035]">The things customers ask to see.</h2><p className="mt-1 text-xs text-[#85847d]">Files Del can confidently share when the words match.</p></div><button onClick={() => setSavedNotice("Upload flow opened")} className="flex w-fit items-center gap-2 rounded-xl bg-[#edf7f0] px-3.5 py-2.5 text-xs font-bold text-[#2e7559] transition hover:bg-[#e0f1e6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68]"><Plus size={14} /> Add media</button></div>
           <div className="grid gap-3 md:grid-cols-2">
             {mediaFiles.map((file) => <div key={file.name} className="group flex items-center gap-3 rounded-xl border border-[#eee6de] bg-[#fcfaf7] p-3.5 transition hover:border-[#b9d7c5] hover:bg-[#f6fbf7]"><div className="grid h-10 w-10 place-items-center rounded-xl bg-[#f4e8dd] text-[#b16b44]"><FileText size={19} /></div><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold text-[#47544d]">{file.name}</p><p className="mt-1 text-[10px] text-[#969088]">{file.type} · {file.detail}</p><p className="mt-1.5 flex items-center gap-1 text-[10px] text-[#5f8975]"><Link2 size={11} /> “{file.trigger}”</p></div><button onClick={() => setSavedNotice(`${file.name} options opened`)} className="rounded-lg p-2 text-[#a29b93] opacity-0 transition hover:bg-[#e9f4ec] hover:text-[#2f765a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68] group-hover:opacity-100" aria-label={`More options for ${file.name}`}><MoreHorizontal size={16} /></button></div>)}
           </div>
         </section>
       </main>
-      <footer className="mx-auto flex max-w-[1480px] items-center justify-between px-6 pb-8 pt-2 text-[10px] text-[#aaa39a] lg:px-8"><span>Likkle Table · Built for the busy bits between orders.</span><span className="hidden items-center gap-1.5 sm:flex"><ShieldCheck size={11} /> Your business facts are in control</span></footer>
+      <footer className="mx-auto flex max-w-[1480px] items-center justify-between px-6 pb-8 pt-2 text-[10px] text-[#aaa39a] lg:px-8"><span>Delegate · Built for the busy bits between orders.</span><span className="hidden items-center gap-1.5 sm:flex"><ShieldCheck size={11} /> Your business facts are in control</span></footer>
     </div>
   );
 }

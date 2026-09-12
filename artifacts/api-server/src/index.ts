@@ -516,10 +516,10 @@ app.use(express.json({
 app.get("/", (_request, response) => response.type("text/plain").send("ok"));
 app.get("/api", (_request, response) => response.type("text/plain").send("ok"));
 app.get("/api/", (_request, response) => response.type("text/plain").send("ok"));
-app.get(["/admin", "/api/admin"], (request, response) => {
+app.get("/api/admin", (request, response) => {
   const token = getQueryString(request, "token");
   // The web app removes this one-time query value from the address bar immediately.
-  response.redirect(token ? `/?admin=1&token=${encodeURIComponent(token)}` : "/?admin=1");
+  response.redirect(token ? `/admin?token=${encodeURIComponent(token)}` : "/admin");
 });
 
 app.get("/admin/:businessId/assistant", (request, response) => {

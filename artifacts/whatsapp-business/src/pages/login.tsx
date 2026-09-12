@@ -1,19 +1,7 @@
 import { Link, useLocation } from "wouter";
-import { MessageCircle, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { useState } from "react";
-
-function Logo({ light = false }: { light?: boolean }) {
-  return (
-    <Link href="/" className="flex items-center gap-3 w-fit">
-      <div className={`grid h-10 w-10 place-items-center rounded-[13px] shadow-sm ${light ? 'bg-white text-[#1c775b]' : 'bg-[#1c775b] text-white'}`}>
-        <MessageCircle size={21} fill="currentColor" strokeWidth={1.5} />
-      </div>
-      <div>
-        <p className={`font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[15px] font-bold tracking-[-0.03em] ${light ? 'text-white' : 'text-[#1c382d]'}`}>Likkle Table</p>
-      </div>
-    </Link>
-  );
-}
+import { Logo } from "@/components/logo";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -117,7 +105,7 @@ export default function Login() {
           </button>
 
           <p className="mt-8 text-center text-sm text-[#777b75]">
-            New to Likkle Table?{" "}
+            New to Delegate?{" "}
             <Link href="/" className="font-bold text-[#1c775b] hover:text-[#145d46]">
               Get started
             </Link>
