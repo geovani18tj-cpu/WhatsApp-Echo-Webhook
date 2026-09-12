@@ -8,7 +8,7 @@ import {
   useHealthCheck,
   useSaveBusinessFact,
 } from "@workspace/api-client-react";
-import { DraftStudio, type DraftKnowledgeProps, type Proposal } from "@/components/draft-studio";
+import { DelChat, useDelDraft, type DraftKnowledgeProps, type Proposal } from "@/components/draft-studio";
 import { Logo } from "@/components/logo";
 
 type Conversation = {
@@ -494,7 +494,7 @@ function DelKnowledgePanel({
   ));
 
   return (
-    <aside className="min-h-[700px] rounded-2xl border border-[#e5dbd1] bg-[#f6f1eb] p-4 shadow-[0_10px_32px_rgba(73,60,46,0.05)]" data-testid="panel-del-knowledge">
+    <section className="rounded-2xl border border-[#e5dbd1] bg-[#f6f1eb] p-4 shadow-[0_10px_32px_rgba(73,60,46,0.05)]" data-testid="panel-del-knowledge">
       <div className="mb-4 flex items-end justify-between gap-3 px-1">
         <div>
           <h2 className="font-['Space_Grotesk'] text-lg font-bold tracking-[-0.04em] text-[#293d33]">What Del knows</h2>
@@ -502,7 +502,7 @@ function DelKnowledgePanel({
         </div>
         {pending.length > 0 && <span className="rounded-full bg-[#f7e5c8] px-2.5 py-1 text-[10px] font-bold text-[#8a5b25]">{pending.length} pending</span>}
       </div>
-      <div className="space-y-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <KnowledgeSection title="Facts" description="Hours, delivery areas, payment and location" icon={Info} testId="panel-knowledge">
           {renderDrafts("fact")}
           <KnowledgePanel setSavedNotice={setSavedNotice} embedded />
@@ -524,7 +524,7 @@ function DelKnowledgePanel({
           <MediaPanel setSavedNotice={setSavedNotice} approvedMedia={approvedMedia} embedded />
         </KnowledgeSection>
       </div>
-    </aside>
+    </section>
   );
 }
 
@@ -619,6 +619,8 @@ export default function Home() {
       ]);
     }
   };
+
+  const delDraft = useDelDraft({ setSavedNotice, onApproved: handleDelApproved });
 
   const activeConversation = conversations.find((c) => c.id === activeId) ?? conversations[0];
   const visibleConversations = useMemo(
@@ -830,18 +832,14 @@ export default function Home() {
 
             {activeNav === "Activity" && <ActivityPanel />}
             {activeNav === "Del" && (
-              <div className="h-full lg:col-span-3">
-                <DraftStudio
-                  setSavedNotice={setSavedNotice}
-                  onApproved={handleDelApproved}
-                  renderKnowledge={(knowledgeProps) => (
-                    <DelKnowledgePanel
-                      {...knowledgeProps}
-                      setSavedNotice={setSavedNotice}
-                      approvedAnswers={approvedAnswers}
-                      approvedMedia={approvedMedia}
-                    />
-                  )}
+              <div className="lg:col-span-2">
+                <DelChat
+                  token={delDraft.token}
+                  messages={delDraft.messages}
+                  input={delDraft.input}
+                  setInput={delDraft.setInput}
+                  onSend={delDraft.handleSend}
+                  isPending={delDraft.isPending}
                 />
               </div>
             )}
@@ -872,6 +870,21 @@ export default function Home() {
                   </div> : null}
                 </div>
               </aside>
+            )}
+
+            {activeNav === "Del" && (
+              <div className="lg:col-span-3">
+                <DelKnowledgePanel
+                  proposals={delDraft.proposals}
+                  proposalFiles={delDraft.proposalFiles}
+                  setProposalFile={delDraft.setProposalFile}
+                  approveProposal={delDraft.approveProposal}
+                  discardProposal={delDraft.discardProposal}
+                  setSavedNotice={setSavedNotice}
+                  approvedAnswers={approvedAnswers}
+                  approvedMedia={approvedMedia}
+                />
+              </div>
             )}
 
           </section>
