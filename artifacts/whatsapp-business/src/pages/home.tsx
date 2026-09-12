@@ -349,7 +349,7 @@ function ActivityPanel() {
 const ActivityIcon = ({className}: {className?: string}) => <Clock3 size={24} className={className} />;
 
 export default function Home() {
-  const [activeNav, setActiveNav] = useState("Draft Studio");
+  const [activeNav, setActiveNav] = useState("Del");
   const [activeId, setActiveId] = useState("danielle");
   const [search, setSearch] = useState("");
   const [autoReply, setAutoReply] = useState(true);
@@ -422,7 +422,7 @@ export default function Home() {
               </div>
             </div>
             <nav className="order-last flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-[#f4eee8] p-1 md:order-none md:w-auto" aria-label="Primary">
-              {["Inbox", "Draft Studio", "Knowledge", "Media", "Activity"].map((item) => (
+              {["Inbox", "Del", "Knowledge", "Media", "Activity"].map((item) => (
                 <button key={item} data-testid={`nav-tab-${item}`} onClick={() => setActiveNav(item)} className={`whitespace-nowrap rounded-lg px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68] ${activeNav === item ? "bg-[#fffdfa] text-[#176b52] shadow-sm" : "text-[#88847e] hover:text-[#38584b]"}`}>
                   {item}
                   {item === "Inbox" ? <span className="ml-2 rounded-full bg-[#dc8454] px-1.5 py-0.5 text-[9px] text-white">3</span> : null}
@@ -443,6 +443,16 @@ export default function Home() {
         </header>
 
         <main className="mx-auto max-w-[1480px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+          <section className="wa-rise mb-5 rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] px-5 py-4 shadow-[0_10px_32px_rgba(73,60,46,0.04)] sm:flex sm:items-center sm:justify-between sm:gap-6">
+            <div className="mb-3 sm:mb-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Today at a glance</p>
+              <p className="mt-1 text-xs text-[#85847d]">Your front desk activity so far.</p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:min-w-[430px]">
+              {[{ value: "18", label: "conversations" }, { value: "11", label: "replied" }, { value: "3", label: "need you" }].map((item) => <div key={item.label} className="rounded-xl bg-[#f8f4ef] px-3 py-2.5 text-center"><p className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.06em] text-[#2e5947]">{item.value}</p><p className="mt-0.5 text-[10px] text-[#918c84]">{item.label}</p></div>)}
+            </div>
+          </section>
+
           <section className="wa-rise mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
             <div>
               <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#a29b92]">
@@ -547,7 +557,7 @@ export default function Home() {
             {activeNav === "Knowledge" && <KnowledgePanel setSavedNotice={setSavedNotice} />}
             {activeNav === "Media" && <MediaPanel setSavedNotice={setSavedNotice} />}
             {activeNav === "Activity" && <ActivityPanel />}
-            {activeNav === "Draft Studio" && <div className="lg:col-span-2 h-full"><DraftStudio setSavedNotice={setSavedNotice} /></div>}
+            {activeNav === "Del" && <div className="lg:col-span-2 h-full"><DraftStudio setSavedNotice={setSavedNotice} /></div>}
 
             {/* RIGHT COLUMN */}
             {activeNav === "Inbox" && (
@@ -577,7 +587,7 @@ export default function Home() {
               </aside>
             )}
 
-            {activeNav !== "Inbox" && activeNav !== "Draft Studio" && (
+            {activeNav !== "Inbox" && activeNav !== "Del" && (
               <aside className="min-h-[700px] space-y-4 hidden lg:block">
                  <div className="rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] shadow-[0_10px_32px_rgba(73,60,46,0.05)] p-5">
                    <h3 className="font-bold text-[#293d33] mb-2 text-sm">{activeNav === "Media" ? "Supported formats" : "Knowledge Health"}</h3>
@@ -596,7 +606,7 @@ export default function Home() {
 
           </section>
 
-          <section className="wa-rise mt-5 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]" style={{ animationDelay: "140ms" }}>
+          <section className="wa-rise mt-5" style={{ animationDelay: "140ms" }}>
             <div className="rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] p-5 shadow-[0_10px_32px_rgba(73,60,46,0.04)] sm:p-6">
               <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                 <div><p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Trust controls</p><h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.04em] text-[#2b4035]">Keep the human in the loop.</h2><p className="mt-1 max-w-md text-xs leading-5 text-[#85847d]">The assistant can draft replies from your knowledge. You decide what leaves the front desk.</p></div>
@@ -608,12 +618,6 @@ export default function Home() {
                   { icon: ShieldCheck, title: "Approval required", copy: "A person checks every customer reply." },
                   { icon: CircleHelp, title: "Escalates kindly", copy: "Unknown questions come back to you." },
                 ].map(({ icon: Icon, title, copy }) => <div key={title} className="rounded-xl border border-[#eee6de] bg-[#fcfaf7] p-3.5"><Icon size={16} className="mb-2 text-[#3b8366]" /><p className="text-xs font-bold text-[#46554d]">{title}</p><p className="mt-1 text-[10px] leading-4 text-[#929089]">{copy}</p></div>)}
-              </div>
-            </div>
-            <div className="rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] p-5 shadow-[0_10px_32px_rgba(73,60,46,0.04)] sm:p-6">
-              <div className="mb-5 flex items-start justify-between"><div><p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Today at a glance</p><h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.04em] text-[#2b4035]">A steady front desk.</h2></div><div className="grid h-8 w-8 place-items-center rounded-xl bg-[#f5eee3] text-[#ad7346]"><Star size={15} fill="currentColor" /></div></div>
-              <div className="grid grid-cols-3 gap-2">
-                {[{ value: "18", label: "conversations" }, { value: "11", label: "replied" }, { value: "3", label: "need you" }].map((item) => <div key={item.label} className="rounded-xl bg-[#f8f4ef] p-3 text-center"><p className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-2xl font-bold tracking-[-0.06em] text-[#2e5947]">{item.value}</p><p className="mt-0.5 text-[10px] text-[#918c84]">{item.label}</p></div>)}
               </div>
             </div>
           </section>

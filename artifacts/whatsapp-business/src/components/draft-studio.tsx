@@ -26,11 +26,11 @@ export function DraftStudio({ setSavedNotice }: { setSavedNotice: (s: string) =>
   
   const [messages, setMessages] = useState<Message[]>(
     !token ? [
-      { role: "assistant", content: "Hi! I'm your Draft Studio assistant. I can help you translate plain-language business updates into structured FAQs and media items for your WhatsApp command centre." },
+      { role: "assistant", content: "Hi! I'm Del. I can help you translate plain-language business updates into structured FAQs and media items for your WhatsApp command centre." },
       { role: "user", content: "We're open on Sundays now from 10am to 2pm." },
       { role: "assistant", content: "I've drafted a new FAQ for your Sunday hours. Review it on the right, then click Save if it is correct." }
     ] : [
-      { role: "assistant", content: "Hi! I'm your Draft Studio assistant. I can help you translate plain-language business updates into structured FAQs and media items. What would you like to update today?" }
+      { role: "assistant", content: "Hi! I'm Del, your AI knowledge assistant. Tell me what you would like to update about your business today." }
     ]
   );
   
@@ -181,8 +181,8 @@ export function DraftStudio({ setSavedNotice }: { setSavedNotice: (s: string) =>
               <Sparkles size={20} strokeWidth={1.8} />
             </div>
             <div>
-              <h2 className="font-['Space_Grotesk'] text-lg font-bold tracking-[-0.04em] text-[#293d33]">Draft Studio</h2>
-              <p className="text-xs text-[#85847d] mt-0.5">Chat to generate new rules and facts</p>
+              <h2 className="font-['Space_Grotesk'] text-lg font-bold tracking-[-0.04em] text-[#293d33]">Del</h2>
+              <p className="text-xs text-[#85847d] mt-0.5">Your AI knowledge assistant</p>
             </div>
           </div>
           {!token && (
