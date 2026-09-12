@@ -12,6 +12,7 @@ import { DraftStudio } from "@/components/draft-studio";
 
 type Conversation = {
   id: string;
+  channel: "whatsapp" | "instagram";
   name: string;
   initials: string;
   tone: string;
@@ -27,6 +28,7 @@ type Conversation = {
 const conversations: Conversation[] = [
   {
     id: "danielle",
+    channel: "whatsapp",
     name: "Danielle Brown",
     initials: "DB",
     tone: "bg-[#d7e6df] text-[#1d5b4b]",
@@ -45,6 +47,7 @@ const conversations: Conversation[] = [
   },
   {
     id: "marcus",
+    channel: "instagram",
     name: "Marcus Williams",
     initials: "MW",
     tone: "bg-[#e8ded3] text-[#7b4a2d]",
@@ -60,6 +63,7 @@ const conversations: Conversation[] = [
   },
   {
     id: "keisha",
+    channel: "whatsapp",
     name: "Keisha Grant",
     initials: "KG",
     tone: "bg-[#e1e2cf] text-[#526332]",
@@ -75,6 +79,7 @@ const conversations: Conversation[] = [
   },
   {
     id: "andre",
+    channel: "whatsapp",
     name: "Andre Thompson",
     initials: "AT",
     tone: "bg-[#dbe1ea] text-[#31537b]",
@@ -383,6 +388,8 @@ export default function Home() {
     () => conversations.filter((c) => `${c.name} ${c.preview} ${c.tag}`.toLowerCase().includes(search.toLowerCase())),
     [search],
   );
+  const whatsappConversations = visibleConversations.filter((conversation) => conversation.channel === "whatsapp");
+  const instagramConversations = visibleConversations.filter((conversation) => conversation.channel === "instagram");
 
   const selectConversation = (id: string) => {
     setActiveId(id);
@@ -418,7 +425,6 @@ export default function Home() {
               </div>
               <div>
                 <p className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[15px] font-bold tracking-[-0.03em] text-[#1c382d]">Likkle Table</p>
-                <p className="hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-[#a09990] sm:block">WhatsApp + Instagram command centre</p>
               </div>
             </div>
             <nav className="order-last flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-[#f4eee8] p-1 md:order-none md:w-auto" aria-label="Primary">
@@ -500,7 +506,26 @@ export default function Home() {
                 {filterOpen ? <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#f8f2ea] px-3 py-2 text-[11px] text-[#7f7b73]"><Filter size={12} className="text-[#26735b]" /> Showing all open conversations <ChevronDown size={12} className="ml-auto" /></div> : null}
               </div>
               <div className="wa-scroll flex-1 overflow-y-auto">
-                {visibleConversations.length ? visibleConversations.map((conversation) => <ConversationRow key={conversation.id} conversation={conversation} selected={conversation.id === activeId} onSelect={() => selectConversation(conversation.id)} />) : <div className="p-8 text-center"><Search className="mx-auto mb-3 text-[#b7aea4]" size={22} /><p className="text-xs font-semibold text-[#6f756e]">No conversations found</p><p className="mt-1 text-[11px] text-[#aaa39a]">Try a name, tag, or message.</p></div>}
+                <section aria-labelledby="whatsapp-inbox-heading">
+                  <div className="flex items-center justify-between border-b border-[#e2eee7] bg-[#f1f8f3] px-4 py-2.5">
+                    <h3 id="whatsapp-inbox-heading" className="flex items-center gap-2 text-[11px] font-bold text-[#286b53]">
+                      <MessageCircle size={13} fill="currentColor" />
+                      WhatsApp
+                    </h3>
+                    <span className="text-[10px] font-semibold text-[#69917f]">{whatsappConversations.length}</span>
+                  </div>
+                  {whatsappConversations.length ? whatsappConversations.map((conversation) => <ConversationRow key={conversation.id} conversation={conversation} selected={conversation.id === activeId} onSelect={() => selectConversation(conversation.id)} />) : <p className="border-b border-[#eee7df] px-4 py-4 text-[11px] text-[#9a958e]">No matching WhatsApp conversations</p>}
+                </section>
+                <section aria-labelledby="instagram-inbox-heading">
+                  <div className="flex items-center justify-between border-b border-[#eadfed] bg-[#faf3fa] px-4 py-2.5">
+                    <h3 id="instagram-inbox-heading" className="flex items-center gap-2 text-[11px] font-bold text-[#895b8e]">
+                      <Instagram size={13} />
+                      Instagram
+                    </h3>
+                    <span className="text-[10px] font-semibold text-[#a17da4]">{instagramConversations.length}</span>
+                  </div>
+                  {instagramConversations.length ? instagramConversations.map((conversation) => <ConversationRow key={conversation.id} conversation={conversation} selected={conversation.id === activeId} onSelect={() => selectConversation(conversation.id)} />) : <p className="border-b border-[#eee7df] px-4 py-4 text-[11px] text-[#9a958e]">No matching Instagram conversations</p>}
+                </section>
               </div>
               <div className="border-t border-[#eee7df] p-3">
                 <button onClick={() => setSavedNotice("New conversation flow opened")} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#cbd9d1] bg-[#f4faf5] py-2.5 text-xs font-bold text-[#2b775c] transition hover:border-[#77b79b] hover:bg-[#e9f5ed] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68]" data-testid="btn-start-conversation"><Plus size={14} /> Start a conversation</button>

@@ -113,7 +113,7 @@ export default function Admin() {
     <main className="min-h-[100dvh] bg-[#f7f2ec] px-5 py-12 text-[#263c31]">
       <div className="mx-auto max-w-md rounded-3xl border border-[#e5dbd1] bg-[#fffdfa] p-8 shadow-[0_16px_42px_rgba(73,60,46,0.08)]">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#2a7a5d]">Likkle Table · Admin</p>
-        <h1 className="mt-3 font-['Space_Grotesk'] text-3xl font-bold tracking-[-0.06em]">Connect your command centre</h1>
+        <h1 className="mt-3 font-['Space_Grotesk'] text-3xl font-bold tracking-[-0.06em]">Connect your business</h1>
         <p className="mt-3 text-sm leading-6 text-[#777b75]">Enter the admin token for this session. It is held in memory only and channel tokens are never saved in this browser.</p>
         <form className="mt-7 space-y-3" onSubmit={(event) => { event.preventDefault(); setToken(tokenDraft.trim()); }}>
           <label className="block text-xs font-bold uppercase tracking-wider text-[#938b82]">Admin token<input data-testid="input-admin-token" className="mt-2 w-full rounded-xl border border-[#dcd5cc] bg-[#fbf8f4] px-3 py-3 text-sm outline-none focus:border-[#67a98b]" type="password" value={tokenDraft} onChange={(event) => setTokenDraft(event.target.value)} /></label>
