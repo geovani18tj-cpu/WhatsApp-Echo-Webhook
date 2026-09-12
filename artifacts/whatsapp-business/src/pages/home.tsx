@@ -355,6 +355,7 @@ const ActivityIcon = ({className}: {className?: string}) => <Clock3 size={24} cl
 
 export default function Home() {
   const [activeNav, setActiveNav] = useState("Inbox");
+  const [activeInboxChannel, setActiveInboxChannel] = useState<Conversation["channel"]>("whatsapp");
   const [activeId, setActiveId] = useState("danielle");
   const [search, setSearch] = useState("");
   const [autoReply, setAutoReply] = useState(true);
@@ -394,6 +395,11 @@ export default function Home() {
   const selectConversation = (id: string) => {
     setActiveId(id);
     setSavedNotice("");
+  };
+  const selectInboxChannel = (channel: Conversation["channel"]) => {
+    setActiveInboxChannel(channel);
+    const firstConversation = conversations.find((conversation) => conversation.channel === channel);
+    if (firstConversation) selectConversation(firstConversation.id);
   };
 
   const draft = drafts[activeConversation.id] || "";
@@ -503,29 +509,42 @@ export default function Home() {
                   <input value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-xs text-[#40514a] outline-none placeholder:text-[#aaa39a]" placeholder="Search conversations" aria-label="Search conversations" />
                   {search ? <button onClick={() => setSearch("")} className="rounded p-0.5 hover:bg-[#eee6dd]" aria-label="Clear search"><X size={12} /></button> : null}
                 </label>
+                <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl bg-[#f4eee8] p-1" aria-label="Inbox channel">
+                  <button
+                    type="button"
+                    onClick={() => selectInboxChannel("whatsapp")}
+                    className={`flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[10px] font-bold transition ${activeInboxChannel === "whatsapp" ? "bg-[#fffdfa] text-[#286b53] shadow-sm" : "text-[#858078] hover:text-[#286b53]"}`}
+                    aria-pressed={activeInboxChannel === "whatsapp"}
+                    data-testid="inbox-channel-whatsapp"
+                  >
+                    <MessageCircle size={12} fill="currentColor" />
+                    WhatsApp
+                    <span className="rounded-full bg-[#e8f3ec] px-1.5 py-0.5 text-[9px]">{whatsappConversations.length}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => selectInboxChannel("instagram")}
+                    className={`flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[10px] font-bold transition ${activeInboxChannel === "instagram" ? "bg-[#fffdfa] text-[#895b8e] shadow-sm" : "text-[#858078] hover:text-[#895b8e]"}`}
+                    aria-pressed={activeInboxChannel === "instagram"}
+                    data-testid="inbox-channel-instagram"
+                  >
+                    <Instagram size={12} />
+                    Instagram
+                    <span className="rounded-full bg-[#f3e8f3] px-1.5 py-0.5 text-[9px]">{instagramConversations.length}</span>
+                  </button>
+                </div>
                 {filterOpen ? <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#f8f2ea] px-3 py-2 text-[11px] text-[#7f7b73]"><Filter size={12} className="text-[#26735b]" /> Showing all open conversations <ChevronDown size={12} className="ml-auto" /></div> : null}
               </div>
               <div className="wa-scroll flex-1 overflow-y-auto">
-                <section aria-labelledby="whatsapp-inbox-heading">
-                  <div className="flex items-center justify-between border-b border-[#e2eee7] bg-[#f1f8f3] px-4 py-2.5">
-                    <h3 id="whatsapp-inbox-heading" className="flex items-center gap-2 text-[11px] font-bold text-[#286b53]">
-                      <MessageCircle size={13} fill="currentColor" />
-                      WhatsApp
-                    </h3>
-                    <span className="text-[10px] font-semibold text-[#69917f]">{whatsappConversations.length}</span>
-                  </div>
-                  {whatsappConversations.length ? whatsappConversations.map((conversation) => <ConversationRow key={conversation.id} conversation={conversation} selected={conversation.id === activeId} onSelect={() => selectConversation(conversation.id)} />) : <p className="border-b border-[#eee7df] px-4 py-4 text-[11px] text-[#9a958e]">No matching WhatsApp conversations</p>}
-                </section>
-                <section aria-labelledby="instagram-inbox-heading">
-                  <div className="flex items-center justify-between border-b border-[#eadfed] bg-[#faf3fa] px-4 py-2.5">
-                    <h3 id="instagram-inbox-heading" className="flex items-center gap-2 text-[11px] font-bold text-[#895b8e]">
-                      <Instagram size={13} />
-                      Instagram
-                    </h3>
-                    <span className="text-[10px] font-semibold text-[#a17da4]">{instagramConversations.length}</span>
-                  </div>
-                  {instagramConversations.length ? instagramConversations.map((conversation) => <ConversationRow key={conversation.id} conversation={conversation} selected={conversation.id === activeId} onSelect={() => selectConversation(conversation.id)} />) : <p className="border-b border-[#eee7df] px-4 py-4 text-[11px] text-[#9a958e]">No matching Instagram conversations</p>}
-                </section>
+                {activeInboxChannel === "whatsapp" ? (
+                  whatsappConversations.length
+                    ? whatsappConversations.map((conversation) => <ConversationRow key={conversation.id} conversation={conversation} selected={conversation.id === activeId} onSelect={() => selectConversation(conversation.id)} />)
+                    : <p className="px-4 py-8 text-center text-[11px] text-[#9a958e]">No matching WhatsApp conversations</p>
+                ) : (
+                  instagramConversations.length
+                    ? instagramConversations.map((conversation) => <ConversationRow key={conversation.id} conversation={conversation} selected={conversation.id === activeId} onSelect={() => selectConversation(conversation.id)} />)
+                    : <p className="px-4 py-8 text-center text-[11px] text-[#9a958e]">No matching Instagram conversations</p>
+                )}
               </div>
               <div className="border-t border-[#eee7df] p-3">
                 <button onClick={() => setSavedNotice("New conversation flow opened")} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#cbd9d1] bg-[#f4faf5] py-2.5 text-xs font-bold text-[#2b775c] transition hover:border-[#77b79b] hover:bg-[#e9f5ed] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68]" data-testid="btn-start-conversation"><Plus size={14} /> Start a conversation</button>
