@@ -47,7 +47,22 @@ async function supabase<T = unknown>(path: string, init: RequestInit = {}): Prom
   const headers = new Headers(init.headers);
   if (!headers.has("Content-Type") && init.body !== undefined && !(init.body instanceof Buffer)) headers.set("Content-Type", "application/json");
   if (!headers.has("Prefer")) headers.set("Prefer", "return=representation");
-  const response = await connectors.proxy("supabase", supabasePath(path), { ...init, headers: Object.fromEntries(headers.entries()) });
+  const projectUrl = process.env.SUPABASE_URL?.replace(/\/+$/, "");
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  let response: globalThis.Response;
+  if (projectUrl && serviceRoleKey) {
+    headers.set("apikey", serviceRoleKey);
+    headers.set("Authorization", `Bearer ${serviceRoleKey}`);
+    response = await fetch(`${projectUrl}${supabasePath(path)}`, {
+      ...init,
+      headers,
+    });
+  } else {
+    response = await connectors.proxy("supabase", supabasePath(path), {
+      ...init,
+      headers: Object.fromEntries(headers.entries()),
+    });
+  }
   const text = await response.text();
   if (!response.ok) {
     let detail = text;
@@ -347,7 +362,7 @@ app.get("/api/", (_request, response) => response.type("text/plain").send("ok"))
 app.get(["/admin", "/api/admin"], (request, response) => {
   const token = getQueryString(request, "token");
   // The web app removes this one-time query value from the address bar immediately.
-  response.redirect(token ? `/?admin=1&token=${encodeURIComponent(token)}` : "/");
+  response.redirect(token ? `/?admin=1&token=${encodeURIComponent(token)}` : "/?admin=1");
 });
 
 app.get(["/health", "/api/health", "/api/healthz"], async (_request, response) => {
