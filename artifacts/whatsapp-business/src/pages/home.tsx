@@ -354,7 +354,7 @@ function ActivityPanel() {
 const ActivityIcon = ({className}: {className?: string}) => <Clock3 size={24} className={className} />;
 
 export default function Home() {
-  const [activeNav, setActiveNav] = useState("Del");
+  const [activeNav, setActiveNav] = useState("Inbox");
   const [activeId, setActiveId] = useState("danielle");
   const [search, setSearch] = useState("");
   const [autoReply, setAutoReply] = useState(true);
