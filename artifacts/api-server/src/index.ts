@@ -123,9 +123,10 @@ function getQueryString(request: Request, key: string): string | undefined {
 }
 
 type AssistantHistoryMessage = { role: "user" | "assistant"; content: string };
+type AssistantFactDraft = { id: string; type: "fact"; key: string; label: string; value: string };
 type AssistantFaqDraft = { id: string; type: "faq"; question: string; answer: string; triggers: string[] };
 type AssistantMediaDraft = { id: string; type: "media"; label: string; triggers: string[] };
-type AssistantDraft = AssistantFaqDraft | AssistantMediaDraft;
+type AssistantDraft = AssistantFactDraft | AssistantFaqDraft | AssistantMediaDraft;
 
 function assistantHistory(value: unknown): AssistantHistoryMessage[] {
   if (!Array.isArray(value)) return [];
@@ -148,7 +149,12 @@ function parseAssistantOutput(text: string): { reply: string; proposals: Assista
     for (const raw of parsed.proposals.slice(0, 8)) {
       if (!isRecord(raw)) continue;
       const triggers = arrayStrings(raw.triggers).slice(0, 12);
-      if (raw.type === "faq") {
+      if (raw.type === "fact") {
+        const key = stringValue(raw.key)?.slice(0, 100);
+        const label = stringValue(raw.label)?.slice(0, 200);
+        const value = stringValue(raw.value)?.slice(0, 2000);
+        if (key && label && value) proposals.push({ id: crypto.randomUUID(), type: "fact", key, label, value });
+      } else if (raw.type === "faq") {
         const question = stringValue(raw.question)?.slice(0, 500);
         const answer = stringValue(raw.answer)?.slice(0, 2000);
         if (question && answer && triggers.length) proposals.push({ id: crypto.randomUUID(), type: "faq", question, answer, triggers });
@@ -174,13 +180,16 @@ Return ONLY valid JSON with this exact top-level shape:
 {"reply":"short conversational response","proposals":[]}
 
 Allowed proposal shapes:
+{"type":"fact","key":"hours|areas|payment|location|short-stable-key","label":"owner-facing fact label","value":"fact value based only on the owner's words"}
 {"type":"faq","question":"customer-style question","answer":"answer based only on the owner's words","triggers":["phrase","patois variation if appropriate"]}
 {"type":"media","label":"clear owner-facing media label","triggers":["phrase customers might use"]}
 
 Rules:
 - Focus on concrete facts in the owner's newest message. Recent history is context only.
 - Never invent hours, locations, prices, availability, policies, products, contact details, or promises.
-- Draft separate FAQ proposals when one message contains multiple distinct facts.
+- Use a fact proposal for business details such as hours, delivery areas, payment methods, and location.
+- Use an FAQ proposal for an approved customer-facing question and answer.
+- Draft separate proposals when one message contains multiple distinct facts or answers.
 - Propose media only when the owner describes a document or image customers should receive, such as a menu or price list.
 - If the newest message is not concrete enough, return an empty proposals array and ask one useful clarifying question in reply.
 - Every proposal is an unapproved draft. Never imply that it was saved, activated, published, or will be sent to customers.

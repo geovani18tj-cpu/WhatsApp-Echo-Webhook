@@ -1,14 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import {
-  Bell, BookOpen, Bot, Check, ChevronDown, ChevronRight, CircleHelp, Clock3, Filter, Info, Instagram, LayoutPanelTop, ListFilter, MapPin, MessageCircle, MoreHorizontal, Paperclip, Pencil, Plus, Search, Send, Settings2, ShieldCheck, Sparkles, Star, Tag, X, FileUp
+  AlertCircle, Bell, BookOpen, Bot, Check, ChevronDown, ChevronRight, CircleHelp, Clock3, FileText, Filter, Info, Instagram, LayoutPanelTop, ListFilter, Loader2, MapPin, MessageCircle, MoreHorizontal, Paperclip, Pencil, Plus, Search, Send, Settings2, ShieldCheck, Sparkles, Star, Tag, X, FileUp
 } from "lucide-react";
 import {
   getHealthCheckQueryKey,
   useHealthCheck,
   useSaveBusinessFact,
 } from "@workspace/api-client-react";
-import { DraftStudio } from "@/components/draft-studio";
+import { DraftStudio, type DraftKnowledgeProps, type Proposal } from "@/components/draft-studio";
 import { Logo } from "@/components/logo";
 
 type Conversation = {
@@ -106,6 +106,21 @@ const initialFacts = [
 const mediaFiles = [
   { name: "April menu & prices", type: "PDF", detail: "2.4 MB · updated 04 Apr", trigger: "menu, prices, what food" },
   { name: "Delivery zones", type: "PNG", detail: "418 KB · updated 28 Mar", trigger: "delivery area, deliver to" },
+];
+
+const initialApprovedAnswers = [
+  {
+    id: "delivery",
+    question: "Where do you deliver?",
+    answer: "We deliver across Kingston, St. Andrew and Portmore. Delivery usually takes 45–75 minutes.",
+    triggers: ["delivery", "deliver to", "Portmore"],
+  },
+  {
+    id: "payment",
+    question: "How can I pay?",
+    answer: "We accept cash, NCB and Scotiabank transfers, and card payments.",
+    triggers: ["pay", "bank transfer", "card"],
+  },
 ];
 
 function Avatar({ initials, tone, small = false }: { initials: string; tone: string; small?: boolean }) {
@@ -230,10 +245,19 @@ function FactCardLarge({ index, fact, onNotice }: { index: number, fact: any, on
   )
 }
 
-function MediaPanel({ setSavedNotice }: { setSavedNotice: (s: string) => void }) {
+type ApprovedMedia = { name: string; type: string; detail: string; trigger: string };
+
+function MediaPanel({ setSavedNotice, approvedMedia = [], embedded = false }: { setSavedNotice: (s: string) => void; approvedMedia?: ApprovedMedia[]; embedded?: boolean }) {
   const { register, watch, setValue, resetField } = useFormContext();
   const [uploading, setUploading] = useState(false);
   const [mediaList, setMediaList] = useState(mediaFiles);
+
+  useEffect(() => {
+    setMediaList((current) => {
+      const additions = approvedMedia.filter((item) => !current.some((existing) => existing.name === item.name && existing.detail === item.detail));
+      return additions.length ? [...current, ...additions] : current;
+    });
+  }, [approvedMedia]);
   
   const file = watch("mediaUpload.file");
   const label = watch("mediaUpload.label");
@@ -264,12 +288,12 @@ function MediaPanel({ setSavedNotice }: { setSavedNotice: (s: string) => void })
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#fffdfa] rounded-2xl border border-[#e5dbd1] shadow-[0_10px_32px_rgba(73,60,46,0.05)] overflow-hidden">
-       <div className="p-5 border-b border-[#eee7df]">
+    <div className={embedded ? "" : "flex flex-col h-full bg-[#fffdfa] rounded-2xl border border-[#e5dbd1] shadow-[0_10px_32px_rgba(73,60,46,0.05)] overflow-hidden"}>
+       {!embedded && <div className="p-5 border-b border-[#eee7df]">
          <h2 className="font-['Space_Grotesk'] text-lg font-bold tracking-[-0.04em] text-[#293d33]">Media Library</h2>
          <p className="text-xs text-[#85847d] mt-1">Upload menus, maps, and guides for Del, your business's AI assistant, to share.</p>
-       </div>
-       <div className="p-5 flex-1 wa-scroll overflow-y-auto space-y-5">
+       </div>}
+       <div className={embedded ? "space-y-5" : "p-5 flex-1 wa-scroll overflow-y-auto space-y-5"}>
          <form onSubmit={onSubmit} className="bg-[#f6f0e8] p-4 rounded-xl border border-[#e2dbd3] space-y-3" data-testid="form-upload-media">
            <p className="text-xs font-bold text-[#46554d] mb-2 flex items-center gap-2"><FileUp size={14} className="text-[#a36b43]" /> Upload new media</p>
            
@@ -314,26 +338,194 @@ function MediaPanel({ setSavedNotice }: { setSavedNotice: (s: string) => void })
   )
 }
 
-function KnowledgePanel({ setSavedNotice }: { setSavedNotice: (s: string) => void }) {
+function KnowledgePanel({ setSavedNotice, embedded = false }: { setSavedNotice: (s: string) => void; embedded?: boolean }) {
   const { watch } = useFormContext();
   const facts = watch("facts");
 
   return (
-    <div className="flex flex-col h-full bg-[#fffdfa] rounded-2xl border border-[#e5dbd1] shadow-[0_10px_32px_rgba(73,60,46,0.05)] overflow-hidden">
-       <div className="p-5 border-b border-[#eee7df] flex justify-between items-center">
+    <div className={embedded ? "" : "flex flex-col h-full bg-[#fffdfa] rounded-2xl border border-[#e5dbd1] shadow-[0_10px_32px_rgba(73,60,46,0.05)] overflow-hidden"}>
+       {!embedded && <div className="p-5 border-b border-[#eee7df] flex justify-between items-center">
          <div>
            <h2 className="font-['Space_Grotesk'] text-lg font-bold tracking-[-0.04em] text-[#293d33]">Knowledge Base</h2>
            <p className="text-xs text-[#85847d] mt-1">Facts Del uses to answer questions reliably.</p>
          </div>
          <span className="flex items-center gap-1.5 text-[10px] font-semibold text-[#478162] bg-[#eef7f0] px-2.5 py-1.5 rounded-full"><span className="h-1.5 w-1.5 rounded-full bg-[#58a879]" /> {facts.length} active facts</span>
-       </div>
-       <div className="p-5 flex-1 wa-scroll overflow-y-auto space-y-3">
+       </div>}
+       <div className={embedded ? "space-y-3" : "p-5 flex-1 wa-scroll overflow-y-auto space-y-3"}>
          {facts.map((fact: any, index: number) => (
             <FactCardLarge key={fact.key} index={index} fact={fact} onNotice={setSavedNotice} />
          ))}
        </div>
     </div>
   )
+}
+
+function KnowledgeSection({
+  title,
+  description,
+  icon: Icon,
+  testId,
+  children,
+}: {
+  title: string;
+  description: string;
+  icon: typeof BookOpen;
+  testId: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-[#e5dbd1] bg-[#fffdfa]" data-testid={testId}>
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#238b68]"
+        aria-expanded={open}
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#eaf4ee] text-[#26735b]"><Icon size={17} /></span>
+          <span>
+            <span className="block text-sm font-bold text-[#293d33]">{title}</span>
+            <span className="mt-0.5 block text-[11px] text-[#85847d]">{description}</span>
+          </span>
+        </span>
+        <ChevronDown size={16} className={`shrink-0 text-[#9c958d] transition ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && <div className="border-t border-[#eee7df] bg-[#fbf8f4] p-4">{children}</div>}
+    </section>
+  );
+}
+
+function ProposalCard({
+  proposal,
+  file,
+  setProposalFile,
+  approveProposal,
+  discardProposal,
+}: {
+  proposal: Proposal;
+  file?: File;
+  setProposalFile: (id: string, file: File | undefined) => void;
+  approveProposal: (proposal: Proposal) => void;
+  discardProposal: (id: string) => void;
+}) {
+  return (
+    <div className="mb-3 rounded-xl border border-[#e7cfa9] bg-[#fffaf0] p-3.5 shadow-sm" data-testid={`del-draft-${proposal.id}`}>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="rounded-md bg-[#f7e5c8] px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-[#8a5b25]">Pending draft</span>
+        <span className="text-[10px] font-semibold capitalize text-[#9b8469]">{proposal.type}</span>
+      </div>
+      {proposal.type === "fact" && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#9c8b78]">{proposal.label}</p>
+          <p className="mt-1 text-sm font-semibold text-[#35453d]">{proposal.value}</p>
+        </div>
+      )}
+      {proposal.type === "faq" && (
+        <div className="space-y-2">
+          <p className="text-sm font-bold text-[#35453d]">{proposal.question}</p>
+          <p className="text-xs leading-5 text-[#68736d]">{proposal.answer}</p>
+        </div>
+      )}
+      {proposal.type === "media" && (
+        <div className="space-y-2">
+          <p className="text-sm font-bold text-[#35453d]">{proposal.label}</p>
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#9c8b78]">Choose file before approval</span>
+            <input
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg,.webp"
+              onChange={(event) => setProposalFile(proposal.id, event.target.files?.[0])}
+              className="w-full text-[11px] text-[#85847d] file:mr-2 file:rounded-md file:border-0 file:bg-[#eef7f0] file:px-2.5 file:py-1.5 file:text-[10px] file:font-bold file:text-[#1c775b]"
+              data-testid={`input-del-draft-file-${proposal.id}`}
+            />
+          </label>
+        </div>
+      )}
+      {proposal.triggers?.length ? (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {proposal.triggers.map((trigger) => <span key={trigger} className="rounded-md bg-[#f4eee8] px-2 py-0.5 text-[10px] text-[#746b5d]">{trigger}</span>)}
+        </div>
+      ) : null}
+      <div className="mt-3 flex gap-2">
+        <button type="button" onClick={() => discardProposal(proposal.id)} disabled={proposal.status !== "pending"} className="flex-1 rounded-lg bg-[#f0e9e1] py-2 text-xs font-semibold text-[#77716a] disabled:opacity-50">Discard</button>
+        <button
+          type="button"
+          onClick={() => approveProposal(proposal)}
+          disabled={proposal.status !== "pending" || (proposal.type === "media" && !file)}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#1c775b] py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-45"
+          data-testid={`btn-approve-del-draft-${proposal.id}`}
+        >
+          {proposal.status === "saving" ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+          {proposal.status === "saving" ? "Approving…" : "Approve"}
+        </button>
+      </div>
+      {proposal.status === "error" && <p className="mt-2 flex items-center gap-1 text-[10px] text-[#b65737]"><AlertCircle size={11} /> Approval failed. Check the details and try again.</p>}
+    </div>
+  );
+}
+
+function DelKnowledgePanel({
+  setSavedNotice,
+  approvedAnswers,
+  approvedMedia,
+  proposals,
+  proposalFiles,
+  setProposalFile,
+  approveProposal,
+  discardProposal,
+}: DraftKnowledgeProps & {
+  setSavedNotice: (message: string) => void;
+  approvedAnswers: typeof initialApprovedAnswers;
+  approvedMedia: ApprovedMedia[];
+}) {
+  const pending = proposals.filter((proposal) => proposal.status !== "saved");
+  const draftsFor = (type: Proposal["type"]) => pending.filter((proposal) => proposal.type === type);
+  const renderDrafts = (type: Proposal["type"]) => draftsFor(type).map((proposal) => (
+    <ProposalCard
+      key={proposal.id}
+      proposal={proposal}
+      file={proposalFiles[proposal.id]}
+      setProposalFile={setProposalFile}
+      approveProposal={approveProposal}
+      discardProposal={discardProposal}
+    />
+  ));
+
+  return (
+    <aside className="min-h-[700px] rounded-2xl border border-[#e5dbd1] bg-[#f6f1eb] p-4 shadow-[0_10px_32px_rgba(73,60,46,0.05)]" data-testid="panel-del-knowledge">
+      <div className="mb-4 flex items-end justify-between gap-3 px-1">
+        <div>
+          <h2 className="font-['Space_Grotesk'] text-lg font-bold tracking-[-0.04em] text-[#293d33]">What Del knows</h2>
+          <p className="mt-1 text-xs text-[#85847d]">Drafts stay pending until you approve them.</p>
+        </div>
+        {pending.length > 0 && <span className="rounded-full bg-[#f7e5c8] px-2.5 py-1 text-[10px] font-bold text-[#8a5b25]">{pending.length} pending</span>}
+      </div>
+      <div className="space-y-3">
+        <KnowledgeSection title="Facts" description="Hours, delivery areas, payment and location" icon={Info} testId="panel-knowledge">
+          {renderDrafts("fact")}
+          <KnowledgePanel setSavedNotice={setSavedNotice} embedded />
+        </KnowledgeSection>
+        <KnowledgeSection title="Approved answers" description={`${approvedAnswers.length} customer-ready FAQs`} icon={BookOpen} testId="panel-approved-answers">
+          {renderDrafts("faq")}
+          <div className="space-y-2">
+            {approvedAnswers.map((faq) => (
+              <div key={faq.id} className="rounded-xl border border-[#eee7df] bg-white p-3" data-testid={`faq-row-${faq.id}`}>
+                <p className="text-xs font-bold text-[#35453d]">{faq.question}</p>
+                <p className="mt-1 text-[11px] leading-5 text-[#737b76]">{faq.answer}</p>
+                <div className="mt-2 flex flex-wrap gap-1">{faq.triggers.map((trigger) => <span key={trigger} className="rounded bg-[#f4eee8] px-1.5 py-0.5 text-[9px] text-[#817970]">{trigger}</span>)}</div>
+              </div>
+            ))}
+          </div>
+        </KnowledgeSection>
+        <KnowledgeSection title="Files" description="PDF, PNG or JPG · maximum 10MB" icon={FileText} testId="panel-media">
+          {renderDrafts("media")}
+          <MediaPanel setSavedNotice={setSavedNotice} approvedMedia={approvedMedia} embedded />
+        </KnowledgeSection>
+      </div>
+    </aside>
+  );
 }
 
 function ActivityPanel() {
@@ -364,6 +556,8 @@ export default function Home() {
   const [showKnowledge, setShowKnowledge] = useState(true);
   const [savedNotice, setSavedNotice] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [approvedAnswers, setApprovedAnswers] = useState(initialApprovedAnswers);
+  const [approvedMedia, setApprovedMedia] = useState<ApprovedMedia[]>([]);
   
   // Local demo state for conversation threads
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -384,6 +578,47 @@ export default function Home() {
       mediaUpload: { label: '', triggers: '', file: undefined }
     }
   });
+
+  const handleDelApproved = (proposal: Proposal, file?: File) => {
+    if (proposal.type === "fact") {
+      const facts = methods.getValues("facts");
+      const index = facts.findIndex((fact) => fact.key === proposal.key);
+      if (index >= 0) {
+        methods.setValue(`facts.${index}.value`, proposal.value || "");
+      } else {
+        methods.setValue("facts", [
+          ...facts,
+          {
+            key: proposal.key || proposal.id,
+            label: proposal.label || "Business fact",
+            value: proposal.value || "",
+            note: "Approved from Del",
+            icon: Info,
+          },
+        ]);
+      }
+    } else if (proposal.type === "faq") {
+      setApprovedAnswers((current) => [
+        ...current,
+        {
+          id: proposal.id,
+          question: proposal.question || "",
+          answer: proposal.answer || "",
+          triggers: proposal.triggers || [],
+        },
+      ]);
+    } else if (file) {
+      setApprovedMedia((current) => [
+        ...current,
+        {
+          name: proposal.label || file.name,
+          type: file.name.split(".").pop()?.toUpperCase() || "FILE",
+          detail: `${(file.size / 1024 / 1024).toFixed(1)} MB · approved just now`,
+          trigger: (proposal.triggers || []).join(", "),
+        },
+      ]);
+    }
+  };
 
   const activeConversation = conversations.find((c) => c.id === activeId) ?? conversations[0];
   const visibleConversations = useMemo(
@@ -428,7 +663,7 @@ export default function Home() {
           <div className="mx-auto flex max-w-[1480px] flex-wrap items-center justify-between gap-3 px-5 py-3 lg:px-8">
             <Logo />
             <nav className="order-last flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-[#f4eee8] p-1 md:order-none md:w-auto" aria-label="Primary">
-              {["Inbox", "Del", "Knowledge", "Media", "Activity"].map((item) => (
+              {["Inbox", "Del", "Activity"].map((item) => (
                 <button key={item} data-testid={`nav-tab-${item}`} onClick={() => setActiveNav(item)} className={`whitespace-nowrap rounded-lg px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68] ${activeNav === item ? "bg-[#fffdfa] text-[#176b52] shadow-sm" : "text-[#88847e] hover:text-[#38584b]"}`}>
                   {item}
                   {item === "Inbox" ? <span className="ml-2 rounded-full bg-[#dc8454] px-1.5 py-0.5 text-[9px] text-white">3</span> : null}
@@ -593,10 +828,23 @@ export default function Home() {
               </section>
             )}
 
-            {activeNav === "Knowledge" && <KnowledgePanel setSavedNotice={setSavedNotice} />}
-            {activeNav === "Media" && <MediaPanel setSavedNotice={setSavedNotice} />}
             {activeNav === "Activity" && <ActivityPanel />}
-            {activeNav === "Del" && <div className="lg:col-span-2 h-full"><DraftStudio setSavedNotice={setSavedNotice} /></div>}
+            {activeNav === "Del" && (
+              <div className="h-full lg:col-span-3">
+                <DraftStudio
+                  setSavedNotice={setSavedNotice}
+                  onApproved={handleDelApproved}
+                  renderKnowledge={(knowledgeProps) => (
+                    <DelKnowledgePanel
+                      {...knowledgeProps}
+                      setSavedNotice={setSavedNotice}
+                      approvedAnswers={approvedAnswers}
+                      approvedMedia={approvedMedia}
+                    />
+                  )}
+                />
+              </div>
+            )}
 
             {/* RIGHT COLUMN */}
             {activeNav === "Inbox" && (
@@ -615,31 +863,14 @@ export default function Home() {
                 <div className="rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] shadow-[0_10px_32px_rgba(73,60,46,0.05)]">
                   <div className="flex items-center justify-between border-b border-[#eee7df] px-4 py-3.5">
                     <button onClick={() => setShowKnowledge((open) => !open)} className="flex items-center gap-2 text-xs font-bold text-[#37463f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68]"><BookOpen size={15} className="text-[#358263]" /> Approved knowledge</button>
-                    <button onClick={() => setActiveNav("Knowledge")} className="rounded-lg p-1.5 text-[#9d968e] transition hover:bg-[#f4eee8] hover:text-[#30765a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68]"><Plus size={15} /></button>
+                    <button onClick={() => setActiveNav("Del")} className="rounded-lg p-1.5 text-[#9d968e] transition hover:bg-[#f4eee8] hover:text-[#30765a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68]"><Plus size={15} /></button>
                   </div>
                   {showKnowledge ? <div className="p-4">
                     <div className="mb-3 flex items-center justify-between"><p className="text-[11px] text-[#8a8982]">{methods.watch("facts").length} facts active</p><span className="flex items-center gap-1 text-[10px] font-semibold text-[#478162]"><span className="h-1.5 w-1.5 rounded-full bg-[#58a879]" /> Synced</span></div>
                     <div className="space-y-2.5">{methods.watch("facts").map((fact: any, index: number) => <FactCardSmall key={fact.key} index={index} fact={fact} onNotice={setSavedNotice} />)}</div>
-                    <button onClick={() => setActiveNav("Knowledge")} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold text-[#36785d] transition hover:bg-[#eff8f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68]">View all facts <ChevronRight size={13} /></button>
+                    <button onClick={() => setActiveNav("Del")} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold text-[#36785d] transition hover:bg-[#eff8f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68]">View all facts <ChevronRight size={13} /></button>
                   </div> : null}
                 </div>
-              </aside>
-            )}
-
-            {activeNav !== "Inbox" && activeNav !== "Del" && (
-              <aside className="min-h-[700px] space-y-4 hidden lg:block">
-                 <div className="rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] shadow-[0_10px_32px_rgba(73,60,46,0.05)] p-5">
-                   <h3 className="font-bold text-[#293d33] mb-2 text-sm">{activeNav === "Media" ? "Supported formats" : "Knowledge Health"}</h3>
-                   {activeNav === "Media" ? (
-                     <ul className="text-xs text-[#777b75] space-y-2">
-                       <li>• PDF (Menus, guides)</li>
-                       <li>• PNG / JPG (Maps, photos)</li>
-                       <li>Max size: 10MB per file.</li>
-                     </ul>
-                   ) : (
-                     <p className="text-xs text-[#777b75]">All facts are synced and actively protecting your replies.</p>
-                   )}
-                 </div>
               </aside>
             )}
 

@@ -186,6 +186,12 @@ export const DraftBusinessAssistantProposalsResponse = zod.object({
   "reply": zod.string(),
   "proposals": zod.array(zod.union([zod.object({
   "id": zod.string(),
+  "type": zod.enum(['fact']),
+  "key": zod.string(),
+  "label": zod.string(),
+  "value": zod.string()
+}),zod.object({
+  "id": zod.string(),
   "type": zod.enum(['faq']),
   "question": zod.string(),
   "answer": zod.string(),

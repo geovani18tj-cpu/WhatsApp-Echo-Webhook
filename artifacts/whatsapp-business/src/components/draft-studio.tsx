@@ -1,18 +1,21 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
 import { 
   useDraftBusinessAssistantProposals, 
   useCreateFaq, 
+  useSaveBusinessFact,
 } from "@workspace/api-client-react";
-import { Bot, Send, Check, AlertCircle, FileText, Sparkles, Loader2, Info } from "lucide-react";
+import { Bot, Send, Sparkles, Info } from "lucide-react";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
 };
 
-type Proposal = {
+export type Proposal = {
   id: string;
-  type: "faq" | "media";
+  type: "fact" | "faq" | "media";
+  key?: string;
+  value?: string;
   question?: string;
   answer?: string;
   label?: string;
@@ -20,7 +23,21 @@ type Proposal = {
   status: "pending" | "saving" | "saved" | "error";
 };
 
-export function DraftStudio({ setSavedNotice }: { setSavedNotice: (s: string) => void }) {
+export type DraftKnowledgeProps = {
+  proposals: Proposal[];
+  proposalFiles: Record<string, File | undefined>;
+  setProposalFile: (id: string, file: File | undefined) => void;
+  approveProposal: (proposal: Proposal) => void;
+  discardProposal: (id: string) => void;
+};
+
+type DraftStudioProps = {
+  setSavedNotice: (message: string) => void;
+  onApproved: (proposal: Proposal, file?: File) => void;
+  renderKnowledge: (props: DraftKnowledgeProps) => ReactNode;
+};
+
+export function DraftStudio({ setSavedNotice, onApproved, renderKnowledge }: DraftStudioProps) {
   const token = new URLSearchParams(window.location.search).get("token");
   const businessId = "00000000-0000-4000-8000-000000000001";
   
@@ -55,6 +72,9 @@ export function DraftStudio({ setSavedNotice }: { setSavedNotice: (s: string) =>
   });
   
   const createFaqMutation = useCreateFaq({
+    request: token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
+  });
+  const saveFactMutation = useSaveBusinessFact({
     request: token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
   });
 
@@ -118,13 +138,28 @@ export function DraftStudio({ setSavedNotice }: { setSavedNotice: (s: string) =>
     if (!token) {
       setTimeout(() => {
         setProposals(prev => prev.map(x => x.id === p.id ? { ...x, status: "saved" } : x));
+        onApproved(p, proposalFiles[p.id]);
         setSavedNotice("Preview only — no data was saved");
         setTimeout(() => setSavedNotice(""), 3000);
       }, 800);
       return;
     }
 
-    if (p.type === 'faq') {
+    if (p.type === "fact") {
+      saveFactMutation.mutate({
+        data: { key: p.key || "", value: p.value || "" },
+      }, {
+        onSuccess: () => {
+          setProposals(prev => prev.map(x => x.id === p.id ? { ...x, status: "saved" } : x));
+          onApproved(p);
+          setSavedNotice("Fact approved");
+          setTimeout(() => setSavedNotice(""), 3000);
+        },
+        onError: () => {
+          setProposals(prev => prev.map(x => x.id === p.id ? { ...x, status: "error" } : x));
+        },
+      });
+    } else if (p.type === 'faq') {
       createFaqMutation.mutate({
         businessId,
         data: {
@@ -135,7 +170,8 @@ export function DraftStudio({ setSavedNotice }: { setSavedNotice: (s: string) =>
       }, {
         onSuccess: () => {
           setProposals(prev => prev.map(x => x.id === p.id ? { ...x, status: "saved" } : x));
-          setSavedNotice("FAQ saved successfully");
+          onApproved(p);
+          setSavedNotice("Approved answer saved");
           setTimeout(() => setSavedNotice(""), 3000);
         },
         onError: () => {
@@ -159,7 +195,8 @@ export function DraftStudio({ setSavedNotice }: { setSavedNotice: (s: string) =>
       }).then((response) => {
         if (!response.ok) throw new Error("Media upload failed");
         setProposals(prev => prev.map(x => x.id === p.id ? { ...x, status: "saved" } : x));
-        setSavedNotice("Media saved successfully");
+        onApproved(p, file);
+        setSavedNotice("File approved and saved");
         setTimeout(() => setSavedNotice(""), 3000);
       }).catch(() => {
         setProposals(prev => prev.map(x => x.id === p.id ? { ...x, status: "error" } : x));
@@ -171,8 +208,15 @@ export function DraftStudio({ setSavedNotice }: { setSavedNotice: (s: string) =>
     setProposals(prev => prev.filter(p => p.id !== id));
   };
 
+  const setProposalFile = (id: string, file: File | undefined) => {
+    setProposalFiles((current) => ({ ...current, [id]: file }));
+    if (file) {
+      setProposals((current) => current.map((item) => item.id === id && item.status === "error" ? { ...item, status: "pending" } : item));
+    }
+  };
+
   return (
-    <div className="flex flex-col lg:flex-row h-full min-h-[700px] gap-4 w-full wa-rise">
+    <div className="grid min-h-[700px] w-full gap-4 wa-rise lg:grid-cols-[minmax(0,1.15fr)_minmax(380px,0.85fr)]">
       {/* Left: Chat */}
       <div className="flex flex-col flex-1 bg-[#fffdfa] rounded-2xl border border-[#e5dbd1] shadow-[0_10px_32px_rgba(73,60,46,0.05)] overflow-hidden">
         <div className="p-5 border-b border-[#eee7df] flex justify-between items-center bg-white">
@@ -237,122 +281,13 @@ export function DraftStudio({ setSavedNotice }: { setSavedNotice: (s: string) =>
         </div>
       </div>
 
-      {/* Right: Proposals */}
-      <div className="flex flex-col w-full lg:w-[360px] xl:w-[400px] shrink-0 bg-[#fffdfa] rounded-2xl border border-[#e5dbd1] shadow-[0_10px_32px_rgba(73,60,46,0.05)] overflow-hidden">
-        <div className="p-5 border-b border-[#eee7df] bg-white flex justify-between items-center">
-          <div>
-            <h3 className="font-['Space_Grotesk'] text-base font-bold tracking-[-0.03em] text-[#293d33]">Pending Proposals</h3>
-            <p className="text-xs text-[#85847d] mt-1">Review each AI draft before saving</p>
-          </div>
-          {proposals.length > 0 && (
-            <span className="bg-[#f0e9e1] text-[#746b5d] text-[10px] font-bold px-2 py-1 rounded-md">
-              {proposals.filter(p => p.status === 'pending').length} pending
-            </span>
-          )}
-        </div>
-        
-        <div className="flex-1 p-4 overflow-y-auto wa-scroll space-y-4 bg-[#fbf8f4]">
-          {proposals.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center px-4 text-[#a39e96]">
-              <FileText size={32} className="mb-3 text-[#d6d0c9]" />
-              <p className="text-sm font-semibold text-[#68635c]">No pending drafts</p>
-              <p className="text-[11px] mt-1.5 leading-relaxed">When Del creates a new FAQ or media keyword, it will appear here for your approval.</p>
-            </div>
-          ) : (
-            proposals.map(p => (
-              <div key={p.id} className={`bg-white border ${p.status === 'saved' ? 'border-[#74b395]' : 'border-[#e5dbd1]'} rounded-xl p-4 shadow-sm relative overflow-hidden transition-all hover:border-[#cbd9d1]`}>
-                {p.status === 'saved' && (
-                  <div className="absolute inset-0 bg-[#eef7f0]/95 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center text-[#1c775b] animate-in fade-in zoom-in duration-300">
-                    <div className="h-10 w-10 bg-white rounded-full grid place-items-center shadow-sm mb-2">
-                      <Check size={20} strokeWidth={2.5} />
-                    </div>
-                    <p className="text-sm font-bold">{token ? "Saved to knowledge" : "Preview only"}</p>
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="bg-[#eef7f0] text-[#1c775b] text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">
-                    {p.type === 'faq' ? 'FAQ Draft' : 'Media Draft'}
-                  </span>
-                </div>
-
-                {p.type === 'faq' ? (
-                  <div className="space-y-3 mb-4">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-[#a09990] mb-1">Question</p>
-                      <p className="text-sm font-semibold text-[#2b3430]">{p.question}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-[#a09990] mb-1">Answer</p>
-                      <p className="text-sm text-[#46554d] leading-relaxed">{p.answer}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3 mb-4">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase text-[#a09990] mb-1">Label</p>
-                      <p className="text-sm font-semibold text-[#2b3430]">{p.label}</p>
-                    </div>
-                    <label className="block">
-                      <span className="mb-1.5 block text-[10px] font-bold uppercase text-[#a09990]">Choose the PDF or image to save</span>
-                      <input
-                        type="file"
-                        accept=".pdf,.png,.jpg,.jpeg,.webp"
-                        onChange={(event) => {
-                          const file = event.target.files?.[0];
-                          setProposalFiles((current) => ({ ...current, [p.id]: file }));
-                          if (file && p.status === "error") {
-                            setProposals((current) => current.map((item) => item.id === p.id ? { ...item, status: "pending" } : item));
-                          }
-                        }}
-                        className="w-full text-[11px] text-[#85847d] file:mr-2 file:rounded-md file:border-0 file:bg-[#eef7f0] file:px-2.5 file:py-1.5 file:text-[10px] file:font-bold file:text-[#1c775b]"
-                      />
-                    </label>
-                  </div>
-                )}
-
-                {p.triggers && p.triggers.length > 0 && (
-                  <div className="mb-5 flex flex-wrap gap-1.5">
-                    {p.triggers.map(t => (
-                      <span key={t} className="bg-[#f4eee8] text-[#746b5d] text-[10px] px-2 py-0.5 rounded-md">
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex gap-2 relative z-0">
-                  <button 
-                    onClick={() => handleDiscard(p.id)}
-                    disabled={p.status !== 'pending'}
-                    className="flex-1 py-2 text-xs font-semibold text-[#85847d] bg-[#f4eee8] rounded-lg transition hover:bg-[#e7ddd2] focus-visible:outline-none"
-                  >
-                    Discard
-                  </button>
-                  <button 
-                    onClick={() => handleApprove(p)}
-                    disabled={p.status !== 'pending'}
-                    className="flex-1 py-2 text-xs font-bold bg-[#1c775b] text-white rounded-lg transition hover:bg-[#145d46] focus-visible:outline-none flex items-center justify-center gap-1.5"
-                  >
-                    {p.status === 'saving' ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <Check size={14} strokeWidth={2.5} />
-                    )}
-                    {p.status === 'saving' ? 'Saving...' : token ? 'Save' : 'Preview save'}
-                  </button>
-                </div>
-                
-                {p.status === 'error' && (
-                  <p className="text-[10px] text-[#c25c38] mt-2 flex items-center justify-center gap-1">
-                    <AlertCircle size={10} /> {p.type === "media" && !proposalFiles[p.id] ? "Choose a file before saving" : "Failed to save"}
-                  </p>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-      </div>
+      {renderKnowledge({
+        proposals,
+        proposalFiles,
+        setProposalFile,
+        approveProposal: handleApprove,
+        discardProposal: handleDiscard,
+      })}
     </div>
   );
 }

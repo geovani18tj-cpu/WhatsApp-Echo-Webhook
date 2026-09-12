@@ -308,6 +308,15 @@ components:
         question: { type: string }
         answer: { type: string }
         triggers: { type: array, items: { type: string } }
+    AssistantFactDraft:
+      type: object
+      required: [id, type, key, label, value]
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [fact] }
+        key: { type: string }
+        label: { type: string }
+        value: { type: string }
     AssistantMediaDraft:
       type: object
       required: [id, type, label, triggers]
@@ -325,6 +334,7 @@ components:
           type: array
           items:
             oneOf:
+              - { $ref: "#/components/schemas/AssistantFactDraft" }
               - { $ref: "#/components/schemas/AssistantFaqDraft" }
               - { $ref: "#/components/schemas/AssistantMediaDraft" }
     MediaItem:

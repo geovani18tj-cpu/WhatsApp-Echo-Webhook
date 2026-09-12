@@ -5,10 +5,11 @@
  * Delegate WhatsApp and Instagram inbox API
  * OpenAPI spec version: 0.2.0
  */
+import type { AssistantFactDraft } from './assistantFactDraft';
 import type { AssistantFaqDraft } from './assistantFaqDraft';
 import type { AssistantMediaDraft } from './assistantMediaDraft';
 
 export interface AssistantDraftResponse {
   reply: string;
-  proposals: (AssistantFaqDraft | AssistantMediaDraft)[];
+  proposals: (AssistantFactDraft | AssistantFaqDraft | AssistantMediaDraft)[];
 }

@@ -127,6 +127,21 @@ export interface AssistantFaqDraft {
   triggers: string[];
 }
 
+export type AssistantFactDraftType = typeof AssistantFactDraftType[keyof typeof AssistantFactDraftType];
+
+
+export const AssistantFactDraftType = {
+  fact: 'fact',
+} as const;
+
+export interface AssistantFactDraft {
+  id: string;
+  type: AssistantFactDraftType;
+  key: string;
+  label: string;
+  value: string;
+}
+
 export type AssistantMediaDraftType = typeof AssistantMediaDraftType[keyof typeof AssistantMediaDraftType];
 
 
@@ -143,7 +158,7 @@ export interface AssistantMediaDraft {
 
 export interface AssistantDraftResponse {
   reply: string;
-  proposals: (AssistantFaqDraft | AssistantMediaDraft)[];
+  proposals: (AssistantFactDraft | AssistantFaqDraft | AssistantMediaDraft)[];
 }
 
 export interface MediaItem {

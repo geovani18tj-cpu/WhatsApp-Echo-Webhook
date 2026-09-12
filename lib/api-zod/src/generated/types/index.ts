@@ -7,6 +7,8 @@
  */
 
 export * from './assistantDraftResponse';
+export * from './assistantFactDraft';
+export * from './assistantFactDraftType';
 export * from './assistantFaqDraft';
 export * from './assistantFaqDraftType';
 export * from './assistantHistoryMessage';
