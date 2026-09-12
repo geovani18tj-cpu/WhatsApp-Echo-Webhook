@@ -8,6 +8,7 @@ import {
   useHealthCheck,
   useSaveBusinessFact,
 } from "@workspace/api-client-react";
+import { DraftStudio } from "@/components/draft-studio";
 
 type Conversation = {
   id: string;
@@ -348,7 +349,7 @@ function ActivityPanel() {
 const ActivityIcon = ({className}: {className?: string}) => <Clock3 size={24} className={className} />;
 
 export default function Home() {
-  const [activeNav, setActiveNav] = useState("Inbox");
+  const [activeNav, setActiveNav] = useState("Draft Studio");
   const [activeId, setActiveId] = useState("danielle");
   const [search, setSearch] = useState("");
   const [autoReply, setAutoReply] = useState(true);
@@ -410,7 +411,7 @@ export default function Home() {
     <FormProvider {...methods}>
       <div className="min-h-[100dvh] bg-background font-['DM_Sans',ui-sans-serif,system-ui,sans-serif] text-foreground">
         <header className="sticky top-0 z-30 border-b border-[#e7ddd2] bg-[#fffdfa]/95 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-[1480px] items-center justify-between gap-4 px-5 py-3 lg:px-8">
+          <div className="mx-auto flex max-w-[1480px] flex-wrap items-center justify-between gap-3 px-5 py-3 lg:px-8">
             <div className="flex items-center gap-3">
               <div className="grid h-10 w-10 place-items-center rounded-[13px] bg-[#1c775b] text-white shadow-[0_6px_16px_rgba(28,119,91,0.22)]">
                 <MessageCircle size={21} fill="currentColor" strokeWidth={1.5} />
@@ -420,9 +421,9 @@ export default function Home() {
                 <p className="hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-[#a09990] sm:block">WhatsApp command centre</p>
               </div>
             </div>
-            <nav className="hidden items-center gap-1 rounded-xl bg-[#f4eee8] p-1 md:flex" aria-label="Primary">
-              {["Inbox", "Knowledge", "Media", "Activity"].map((item) => (
-                <button key={item} data-testid={`nav-tab-${item}`} onClick={() => setActiveNav(item)} className={`rounded-lg px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68] ${activeNav === item ? "bg-[#fffdfa] text-[#176b52] shadow-sm" : "text-[#88847e] hover:text-[#38584b]"}`}>
+            <nav className="order-last flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-[#f4eee8] p-1 md:order-none md:w-auto" aria-label="Primary">
+              {["Inbox", "Draft Studio", "Knowledge", "Media", "Activity"].map((item) => (
+                <button key={item} data-testid={`nav-tab-${item}`} onClick={() => setActiveNav(item)} className={`whitespace-nowrap rounded-lg px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68] ${activeNav === item ? "bg-[#fffdfa] text-[#176b52] shadow-sm" : "text-[#88847e] hover:text-[#38584b]"}`}>
                   {item}
                   {item === "Inbox" ? <span className="ml-2 rounded-full bg-[#dc8454] px-1.5 py-0.5 text-[9px] text-white">3</span> : null}
                 </button>
@@ -469,7 +470,7 @@ export default function Home() {
           <section className="wa-rise grid gap-4 lg:grid-cols-[minmax(210px,0.85fr)_minmax(410px,1.65fr)_minmax(260px,0.92fr)]" style={{ animationDelay: "70ms" }}>
             
             {/* LEFT COLUMN - INBOX */}
-            <aside className="flex min-h-[700px] flex-col overflow-hidden rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] shadow-[0_10px_32px_rgba(73,60,46,0.05)]">
+            <aside className={`${activeNav === "Inbox" ? "flex" : "hidden lg:flex"} min-h-[700px] flex-col overflow-hidden rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] shadow-[0_10px_32px_rgba(73,60,46,0.05)]`}>
               <div className="border-b border-[#eee7df] p-4">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
@@ -546,6 +547,7 @@ export default function Home() {
             {activeNav === "Knowledge" && <KnowledgePanel setSavedNotice={setSavedNotice} />}
             {activeNav === "Media" && <MediaPanel setSavedNotice={setSavedNotice} />}
             {activeNav === "Activity" && <ActivityPanel />}
+            {activeNav === "Draft Studio" && <div className="lg:col-span-2 h-full"><DraftStudio setSavedNotice={setSavedNotice} /></div>}
 
             {/* RIGHT COLUMN */}
             {activeNav === "Inbox" && (
@@ -575,7 +577,7 @@ export default function Home() {
               </aside>
             )}
 
-            {activeNav !== "Inbox" && (
+            {activeNav !== "Inbox" && activeNav !== "Draft Studio" && (
               <aside className="min-h-[700px] space-y-4 hidden lg:block">
                  <div className="rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] shadow-[0_10px_32px_rgba(73,60,46,0.05)] p-5">
                    <h3 className="font-bold text-[#293d33] mb-2 text-sm">{activeNav === "Media" ? "Supported formats" : "Knowledge Health"}</h3>
