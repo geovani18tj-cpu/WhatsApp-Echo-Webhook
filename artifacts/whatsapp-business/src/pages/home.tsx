@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import {
-  Bell, BookOpen, Bot, Check, ChevronDown, ChevronRight, CircleHelp, Clock3, Filter, Info, LayoutPanelTop, ListFilter, MapPin, MessageCircle, MoreHorizontal, Paperclip, Pencil, Plus, Search, Send, Settings2, ShieldCheck, Sparkles, Star, Tag, X, FileUp
+  Bell, BookOpen, Bot, Check, ChevronDown, ChevronRight, CircleHelp, Clock3, Filter, Info, Instagram, LayoutPanelTop, ListFilter, MapPin, MessageCircle, MoreHorizontal, Paperclip, Pencil, Plus, Search, Send, Settings2, ShieldCheck, Sparkles, Star, Tag, X, FileUp
 } from "lucide-react";
 import {
   getHealthCheckQueryKey,
@@ -418,7 +418,7 @@ export default function Home() {
               </div>
               <div>
                 <p className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[15px] font-bold tracking-[-0.03em] text-[#1c382d]">Likkle Table</p>
-                <p className="hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-[#a09990] sm:block">WhatsApp command centre</p>
+                <p className="hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-[#a09990] sm:block">WhatsApp + Instagram command centre</p>
               </div>
             </div>
             <nav className="order-last flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-[#f4eee8] p-1 md:order-none md:w-auto" aria-label="Primary">
@@ -443,16 +443,6 @@ export default function Home() {
         </header>
 
         <main className="mx-auto max-w-[1480px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
-          <section className="wa-rise mb-5 rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] px-5 py-4 shadow-[0_10px_32px_rgba(73,60,46,0.04)] sm:flex sm:items-center sm:justify-between sm:gap-6">
-            <div className="mb-3 sm:mb-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Today at a glance</p>
-              <p className="mt-1 text-xs text-[#85847d]">Your front desk activity so far.</p>
-            </div>
-            <div className="grid grid-cols-3 gap-2 sm:min-w-[430px]">
-              {[{ value: "18", label: "conversations" }, { value: "11", label: "replied" }, { value: "3", label: "need you" }].map((item) => <div key={item.label} className="rounded-xl bg-[#f8f4ef] px-3 py-2.5 text-center"><p className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.06em] text-[#2e5947]">{item.value}</p><p className="mt-0.5 text-[10px] text-[#918c84]">{item.label}</p></div>)}
-            </div>
-          </section>
-
           <section className="wa-rise mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
             <div>
               <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#a29b92]">
@@ -462,18 +452,29 @@ export default function Home() {
               <p className="mt-1.5 max-w-xl text-sm leading-6 text-[#777b75]">Your front desk is clear on what to say, and ready for what comes in next.</p>
             </div>
             
-            <div className="flex items-center gap-2 rounded-2xl border border-[#d8e4dc] bg-[#eef7f0] px-3 py-2.5 text-xs text-[#397158]" data-testid="status-connection">
-              {isConnected ? (
-                <>
-                  <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#4ca475] opacity-50" /><span className="relative inline-flex h-2 w-2 rounded-full bg-[#4ca475]" /></span>
-                  <span><strong className="font-bold">WhatsApp connected</strong> · replies are protected by your facts</span>
-                </>
-              ) : (
-                <>
-                  <span className="relative flex h-2 w-2"><span className="relative inline-flex h-2 w-2 rounded-full bg-[#c25c38]" /></span>
-                  <span className="text-[#a64a2b]"><strong className="font-bold">Connection lost</strong> · reconnecting to WhatsApp...</span>
-                </>
-              )}
+            <div className="flex flex-col gap-2 sm:flex-row" data-testid="status-connections">
+              <div className="flex items-center gap-2 rounded-2xl border border-[#d8e4dc] bg-[#eef7f0] px-3 py-2.5 text-xs text-[#397158]" data-testid="status-whatsapp">
+                <MessageCircle size={14} fill="currentColor" />
+                {isConnected ? (
+                  <span><strong className="font-bold">WhatsApp</strong> · Likkle Table connected</span>
+                ) : (
+                  <span className="text-[#a64a2b]"><strong className="font-bold">WhatsApp</strong> · reconnecting</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 rounded-2xl border border-[#ded8ea] bg-[#f5f0fa] px-3 py-2.5 text-xs text-[#76598c]" data-testid="status-instagram">
+                <Instagram size={14} />
+                <span><strong className="font-bold">Instagram</strong> · @likkletable connected</span>
+              </div>
+            </div>
+          </section>
+
+          <section className="wa-rise mb-5 rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] px-5 py-4 shadow-[0_10px_32px_rgba(73,60,46,0.04)] sm:flex sm:items-center sm:justify-between sm:gap-6" style={{ animationDelay: "40ms" }}>
+            <div className="mb-3 sm:mb-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Today at a glance</p>
+              <p className="mt-1 text-xs text-[#85847d]">Across WhatsApp and Instagram.</p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:min-w-[430px]">
+              {[{ value: "18", label: "conversations" }, { value: "11", label: "replied" }, { value: "3", label: "need you" }].map((item) => <div key={item.label} className="rounded-xl bg-[#f8f4ef] px-3 py-2.5 text-center"><p className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.06em] text-[#2e5947]">{item.value}</p><p className="mt-0.5 text-[10px] text-[#918c84]">{item.label}</p></div>)}
             </div>
           </section>
 
