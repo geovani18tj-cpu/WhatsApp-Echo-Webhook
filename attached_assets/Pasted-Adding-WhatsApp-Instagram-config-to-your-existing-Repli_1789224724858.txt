@@ -1,0 +1,44 @@
+Adding WhatsApp + Instagram config to your existing Replit build
+1. Add these Secrets (Tools → Secrets)
+Key	Value
+WHATSAPP_VERIFY_TOKEN	any string you invent
+WHATSAPP_API_VERSION	v21.0
+SUPABASE_URL	from your Supabase project settings
+SUPABASE_SERVICE_ROLE_KEY	from your Supabase project settings (service_role, not anon)
+APP_BASE_URL	your Repl's public URL, e.g. https://whatsapp-echo-webhook.yourname.repl.co
+ADMIN_TOKEN	any string you invent — turns on /admin so you can add businesses without SQL
+META_APP_SECRET	optional, from Meta App Dashboard → Settings → Basic
+
+Don't put WhatsApp/Instagram tokens here. Those live per-business in the Supabase businesses table — added through /admin in step 3, not Secrets.
+
+2. Run the Supabase schema
+
+In your Supabase project's SQL editor (not Replit):
+
+Run supabase/schema.sql.
+Optionally run supabase/demo_seed.sql for fake walkthrough data at /demo.
+3. Connect a real business — WhatsApp
+Meta App Dashboard → your app → WhatsApp → API Setup.
+Copy the Phone number ID and access token (swap the temporary one for a permanent System User token before charging anyone).
+Add the business's real WhatsApp number as a tester on your app (App Dashboard → App Roles → Testers).
+Go to https://<your-repl-url>/admin?token=<your ADMIN_TOKEN> and create the business there — phone number ID, access token, the owner's own WhatsApp number, timezone, digest hour. Add a media item (price list) and a couple FAQs.
+4. Connect a real business — Instagram
+
+Instagram rides on a Facebook Page connected to the Instagram account, not the IG account directly:
+
+The Instagram account must be a Professional account (Business or Creator).
+It must be linked to a Facebook Page the owner controls.
+In Meta App Dashboard → your app, add the Instagram product.
+Connect that Page under Instagram → API Setup. Meta shows you the Instagram User ID.
+Generate a Page Access Token with instagram_business_basic + instagram_business_manage_messages.
+Add the owner's Facebook account as a tester/role on your app.
+In /admin, fill in that business's Instagram user ID + Page access token.
+
+One webhook for both. Subscribe WhatsApp and Instagram to the same https://<your-repl-url>/webhook, same verify token — the app tells them apart automatically. Subscribe to messages on both.
+
+5. Test it
+/health → {"ok":true}.
+Meta's Webhook config → "Verify and Save" should succeed.
+Message the WhatsApp number: "price list" gets the file, your FAQ phrasing gets the stored answer, anything else pings the owner.
+Repeat on Instagram once connected.
+/demo any time to see the flow without live traffic.
