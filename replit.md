@@ -13,6 +13,7 @@ Protected multi-business inbox automation with FAQ and private media replies.
 - Configure `ADMIN_TOKEN`, `WHATSAPP_VERIFY_TOKEN` (or the legacy `VERIFY_TOKEN`), and optionally `WHATSAPP_API_VERSION` / `META_APP_SECRET` as Replit Secrets. Open `/admin` and enter the admin token for the current browser session.
 - In Meta, connect WhatsApp and Instagram to the same webhook path `/webhook` and subscribe to messages. Instagram requires a Professional (Business or Creator) account linked to a Facebook Page. Add each business's per-channel credentials through `/admin`; they are never returned by list/read APIs or persisted in the browser.
 - Complete Meta's webhook verification and external subscription steps before treating traffic as live. `/demo` renders the seeded WhatsApp and Instagram walkthrough live from Supabase.
+- The owner drafting assistant uses Replit-managed Anthropic; usage is billed to Replit credits and no personal Anthropic key is required.
 
 ## Stack
 

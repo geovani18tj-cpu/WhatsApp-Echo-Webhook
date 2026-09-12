@@ -162,11 +162,12 @@ function parseAssistantOutput(text: string): { reply: string; proposals: Assista
 }
 
 async function draftBusinessProposals(message: string, history: AssistantHistoryMessage[]): Promise<{ reply: string; proposals: AssistantDraft[] }> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not configured");
-  const client = new Anthropic({ apiKey });
+  const apiKey = process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY;
+  const baseURL = process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
+  if (!apiKey || !baseURL) throw new Error("Replit-managed Anthropic is not configured");
+  const client = new Anthropic({ apiKey, baseURL });
   const result = await client.messages.create({
-    model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-5",
+    model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5",
     max_tokens: 8192,
     system: `You help a small-business owner turn their own descriptions into drafts they can review.
 Return ONLY valid JSON with this exact top-level shape:
