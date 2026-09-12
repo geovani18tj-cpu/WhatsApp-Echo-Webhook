@@ -96,6 +96,8 @@ async function buildAll() {
       "puppeteer",
       "puppeteer-core",
       "electron",
+      "tesseract.js",
+      "tesseract.js-core",
     ],
     sourcemap: "linked",
     // Make sure packages that are cjs only (e.g. express) but are bundled continue to work in our esm output file

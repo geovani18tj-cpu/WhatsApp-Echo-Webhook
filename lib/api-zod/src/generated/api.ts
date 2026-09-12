@@ -107,6 +107,7 @@ export const ListFaqsResponseItem = zod.object({
   "question": zod.string(),
   "answer": zod.string(),
   "triggers": zod.array(zod.string()),
+  "active": zod.boolean(),
   "created_at": zod.string()
 })
 export const ListFaqsResponse = zod.array(ListFaqsResponseItem)
@@ -132,6 +133,7 @@ export const CreateFaqResponse = zod.object({
   "question": zod.string(),
   "answer": zod.string(),
   "triggers": zod.array(zod.string()),
+  "active": zod.boolean(),
   "created_at": zod.string()
 })
 
@@ -142,6 +144,22 @@ export const DeleteFaqParams = zod.object({
 })
 
 export const DeleteFaqResponse = zod.void()
+
+
+export const DisableFaqParams = zod.object({
+  "businessId": zod.coerce.string().uuid(),
+  "faqId": zod.coerce.string().uuid()
+})
+
+export const DisableFaqResponse = zod.object({
+  "id": zod.string().uuid(),
+  "business_id": zod.string().uuid(),
+  "question": zod.string(),
+  "answer": zod.string(),
+  "triggers": zod.array(zod.string()),
+  "active": zod.boolean(),
+  "created_at": zod.string()
+})
 
 
 export const ListMediaParams = zod.object({

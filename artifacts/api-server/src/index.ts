@@ -1,6 +1,7 @@
 import express, { type Request, type Response } from "express";
 import crypto from "node:crypto";
 import { ReplitConnectors } from "@replit/connectors-sdk";
+import { createWorker } from "tesseract.js";
 
 const app = express();
 const port = Number(process.env.PORT ?? 5000);
@@ -148,6 +149,16 @@ function phoneDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;",
+  })[character] ?? character);
+}
+
 async function insertEvent(path: string, row: Row): Promise<Row | undefined> {
   try {
     const result = await supabase<Row[]>(path, { method: "POST", body: JSON.stringify(row) });
@@ -213,14 +224,68 @@ async function sendMedia(business: Row, recipient: string, media: Row): Promise<
   });
 }
 
-async function processIncoming(event: { channel: "whatsapp" | "instagram"; messageId: string; sender: string; recipient: string; text: string; payload: Row }): Promise<void> {
-  const { channel, messageId, sender, recipient, text, payload } = event;
+async function extractWhatsAppImageText(business: Row, imageId: string): Promise<string> {
+  const token = stringValue(business.whatsapp_access_token);
+  if (!token) throw new Error("No WhatsApp access token configured for image OCR");
+  const metadataResponse = await fetch(`https://graph.facebook.com/${apiVersion}/${encodeURIComponent(imageId)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const metadata = await metadataResponse.json() as Row;
+  const mediaUrl = stringValue(metadata.url);
+  if (!metadataResponse.ok || !mediaUrl) throw new Error(`WhatsApp media lookup returned ${metadataResponse.status}`);
+  const mediaResponse = await fetch(mediaUrl, { headers: { Authorization: `Bearer ${token}` } });
+  if (!mediaResponse.ok) throw new Error(`WhatsApp media download returned ${mediaResponse.status}`);
+  const image = Buffer.from(await mediaResponse.arrayBuffer());
+  const worker = await createWorker("eng");
+  try {
+    const result = await worker.recognize(image);
+    return result.data.text.replace(/\s+/g, " ").trim();
+  } finally {
+    await worker.terminate();
+  }
+}
+
+async function escalateToOwner(
+  business: Row,
+  channel: "whatsapp" | "instagram",
+  sender: string,
+  description: string,
+): Promise<"owner_escalation" | "owner_unavailable"> {
+  const owner = stringValue(business.owner_whatsapp_number);
+  if (!owner || (channel === "whatsapp" && phoneDigits(owner) === phoneDigits(sender))) return "owner_unavailable";
+  await sendText(business, "whatsapp", phoneDigits(owner), `New ${channel} message needs a reply from ${sender}: ${description}`);
+  return "owner_escalation";
+}
+
+async function processIncoming(event: {
+  channel: "whatsapp" | "instagram";
+  messageId: string;
+  sender: string;
+  recipient: string;
+  text?: string;
+  messageType: string;
+  imageId?: string;
+  payload: Row;
+}): Promise<void> {
+  const { channel, messageId, sender, recipient, messageType, imageId, payload } = event;
+  let text = event.text ?? "";
   if (processedMessageIds.has(`${channel}:${messageId}`)) return;
   processedMessageIds.add(`${channel}:${messageId}`);
   const filter = channel === "whatsapp" ? `phone_number_id=eq.${encodeURIComponent(recipient)}` : `instagram_user_id=eq.${encodeURIComponent(recipient)}`;
   const businesses = await supabase<Row[]>(`/rest/v1/businesses?${filter}&select=*`);
   const business = businesses[0];
   if (!business) {
+    await insertEvent("/rest/v1/inbound_message_events", {
+      business_id: null,
+      channel,
+      external_message_id: messageId,
+      sender_id: sender,
+      recipient_id: recipient,
+      message_type: messageType,
+      message_text: text || null,
+      payload,
+      outcome: "business_not_found",
+    });
     log("webhook business not found", { channel, messageId });
     return;
   }
@@ -228,29 +293,41 @@ async function processIncoming(event: { channel: "whatsapp" | "instagram"; messa
   if (existing.length) return;
   await insertEvent("/rest/v1/inbound_message_events", {
     business_id: business.id, channel, external_message_id: messageId, sender_id: sender, recipient_id: recipient,
-    message_type: "text", message_text: text, payload, outcome: "received",
+    message_type: messageType, message_text: text || null, payload, outcome: "received",
   });
 
   let outcome = "escalated";
+  let matchedFaqId: string | undefined;
   try {
-    const mediaRows = await supabase<Row[]>(`/rest/v1/media_items?business_id=eq.${business.id}&select=*`);
-    const media = mediaRows.find((item) => matches(text, arrayStrings(item.triggers)));
-    if (media && channel === "whatsapp") {
-      await sendMedia(business, sender, media);
-      outcome = "media_reply";
+    if (channel === "whatsapp" && messageType === "image") {
+      if (imageId) {
+        try {
+          text = await extractWhatsAppImageText(business, imageId);
+        } catch (error) {
+          log("whatsapp image OCR failed", { messageId, businessId: business.id, error: errorMessage(error) });
+        }
+      }
+      const ocrSummary = text
+        ? `Image received. OCR text: ${text}`
+        : "Image received. No readable text was found.";
+      outcome = await escalateToOwner(business, channel, sender, ocrSummary);
+    } else if (!text) {
+      outcome = await escalateToOwner(business, channel, sender, `${messageType} message received with no text.`);
     } else {
-      const faqs = await supabase<Row[]>(`/rest/v1/faqs?business_id=eq.${business.id}&select=*`);
-      const faq = faqs.find((item) => matches(text, [...arrayStrings(item.triggers), stringValue(item.question) ?? ""]));
-      if (faq) {
-        await sendText(business, channel, sender, stringValue(faq.answer) ?? "Thanks for your message.");
-        outcome = "faq_reply";
+      const mediaRows = await supabase<Row[]>(`/rest/v1/media_items?business_id=eq.${business.id}&select=*`);
+      const media = mediaRows.find((item) => matches(text, arrayStrings(item.triggers)));
+      if (media && channel === "whatsapp") {
+        await sendMedia(business, sender, media);
+        outcome = "media_reply";
       } else {
-        const owner = stringValue(business.owner_whatsapp_number);
-        if (owner && !(channel === "whatsapp" && phoneDigits(owner) === phoneDigits(sender))) {
-          await sendText(business, "whatsapp", phoneDigits(owner), `New ${channel} message needs a reply from ${sender}: ${text}`);
-          outcome = "owner_escalation";
+        const faqs = await supabase<Row[]>(`/rest/v1/faqs?business_id=eq.${business.id}&active=eq.true&select=*`);
+        const faq = faqs.find((item) => matches(text, [...arrayStrings(item.triggers), stringValue(item.question) ?? ""]));
+        if (faq) {
+          await sendText(business, channel, sender, stringValue(faq.answer) ?? "Thanks for your message.");
+          matchedFaqId = stringValue(faq.id);
+          outcome = "faq_reply";
         } else {
-          outcome = "owner_unavailable";
+          outcome = await escalateToOwner(business, channel, sender, text);
         }
       }
     }
@@ -259,7 +336,11 @@ async function processIncoming(event: { channel: "whatsapp" | "instagram"; messa
     log("incoming message processing failed", { channel, messageId, businessId: business.id, error: errorMessage(error) });
   }
   await supabase(`/rest/v1/inbound_message_events?channel=eq.${channel}&external_message_id=eq.${encodeURIComponent(messageId)}`, {
-    method: "PATCH", body: JSON.stringify({ outcome }),
+    method: "PATCH", body: JSON.stringify({
+      outcome,
+      message_text: text || null,
+      ...(matchedFaqId ? { matched_faq_id: matchedFaqId } : {}),
+    }),
   }).catch((error) => log("event outcome update failed", { channel, messageId, error: errorMessage(error) }));
 }
 
@@ -331,7 +412,8 @@ async function handleWebhook(body: unknown): Promise<void> {
         const message = raw.message;
         const text = stringValue(message.text);
         const id = stringValue(message.mid);
-        if (sender && recipient && text && id) void processIncoming({ channel: "instagram", messageId: id, sender, recipient, text, payload: raw }).catch((error) => log("instagram message processing failed", { messageId: id, error: errorMessage(error) }));
+        const messageType = text ? "text" : Array.isArray(message.attachments) ? "attachment" : "unknown";
+        if (sender && recipient && id) void processIncoming({ channel: "instagram", messageId: id, sender, recipient, text, messageType, payload: raw }).catch((error) => log("instagram message processing failed", { messageId: id, error: errorMessage(error) }));
       }
       continue;
     }
@@ -344,9 +426,11 @@ async function handleWebhook(body: unknown): Promise<void> {
       for (const rawMessage of value.messages) {
         if (!isRecord(rawMessage)) continue;
         const text = isRecord(rawMessage.text) ? stringValue(rawMessage.text.body) : undefined;
+        const messageType = stringValue(rawMessage.type) ?? (text ? "text" : "unknown");
+        const imageId = isRecord(rawMessage.image) ? stringValue(rawMessage.image.id) : undefined;
         const sender = stringValue(rawMessage.from);
         const id = stringValue(rawMessage.id);
-        if (sender && id && text) void processIncoming({ channel: "whatsapp", messageId: id, sender, recipient, text, payload: rawMessage }).catch((error) => log("whatsapp message processing failed", { messageId: id, error: errorMessage(error) }));
+        if (sender && id) void processIncoming({ channel: "whatsapp", messageId: id, sender, recipient, text, messageType, imageId, payload: rawMessage }).catch((error) => log("whatsapp message processing failed", { messageId: id, error: errorMessage(error) }));
       }
     }
   }
@@ -403,7 +487,7 @@ app.patch("/api/businesses/:businessId", (request, response) => {
 
 app.get("/api/businesses/:businessId/faqs", (request, response) => {
   if (!requireAdmin(request, response)) return;
-  void supabase<Row[]>(`/rest/v1/faqs?business_id=eq.${encodeURIComponent(request.params.businessId)}&select=id,business_id,question,answer,triggers,created_at&order=created_at.desc`)
+  void supabase<Row[]>(`/rest/v1/faqs?business_id=eq.${encodeURIComponent(request.params.businessId)}&select=id,business_id,question,answer,triggers,active,created_at&order=created_at.desc`)
     .then((rows) => response.json(rows)).catch((error) => response.status(502).json({ error: errorMessage(error) }));
 });
 
@@ -420,6 +504,61 @@ app.delete("/api/businesses/:businessId/faqs/:faqId", (request, response) => {
   if (!requireAdmin(request, response)) return;
   void supabase(`/rest/v1/faqs?id=eq.${encodeURIComponent(request.params.faqId)}&business_id=eq.${encodeURIComponent(request.params.businessId)}`, { method: "DELETE" })
     .then(() => response.sendStatus(204)).catch((error) => response.status(400).json({ error: errorMessage(error) }));
+});
+
+app.post("/api/businesses/:businessId/faqs/:faqId/disable", (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const businessId = encodeURIComponent(request.params.businessId);
+  const faqId = encodeURIComponent(request.params.faqId);
+  void supabase<Row[]>(`/rest/v1/faqs?id=eq.${faqId}&business_id=eq.${businessId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ active: false }),
+  }).then((rows) => {
+    if (!rows[0]) {
+      response.status(404).json({ error: "FAQ not found" });
+      return;
+    }
+    if (request.accepts(["html", "json"]) === "html") {
+      const token = getQueryString(request, "token");
+      response.redirect(`/corrections/${encodeURIComponent(request.params.businessId)}${token ? `?token=${encodeURIComponent(token)}` : ""}`);
+      return;
+    }
+    response.json(rows[0]);
+  }).catch((error) => response.status(400).json({ error: errorMessage(error) }));
+});
+
+app.get("/corrections/:businessId", async (request, response) => {
+  if (!requireAdmin(request, response)) return;
+  const businessId = request.params.businessId;
+  const token = getQueryString(request, "token") ?? "";
+  try {
+    const events = await supabase<Row[]>(
+      `/rest/v1/inbound_message_events?business_id=eq.${encodeURIComponent(businessId)}&outcome=eq.faq_reply&matched_faq_id=not.is.null&select=id,message_text,matched_faq_id,created_at&order=created_at.desc&limit=20`,
+    );
+    const faqIds = [...new Set(events.map((event) => stringValue(event.matched_faq_id)).filter((id): id is string => Boolean(id)))];
+    const faqs = faqIds.length
+      ? await supabase<Row[]>(`/rest/v1/faqs?business_id=eq.${encodeURIComponent(businessId)}&id=in.(${faqIds.map(encodeURIComponent).join(",")})&select=id,answer,active`)
+      : [];
+    const faqById = new Map(faqs.map((faq) => [stringValue(faq.id), faq]));
+    const rows = events.map((event) => {
+      const faqId = stringValue(event.matched_faq_id) ?? "";
+      const faq = faqById.get(faqId);
+      const disabled = faq?.active === false;
+      return `<article>
+        <p><strong>Question asked</strong><br>${escapeHtml(event.message_text || "(no text recorded)")}</p>
+        <p><strong>Answer sent</strong><br>${escapeHtml(faq?.answer || "(FAQ no longer available)")}</p>
+        <form method="post" action="/api/businesses/${encodeURIComponent(businessId)}/faqs/${encodeURIComponent(faqId)}/disable?token=${encodeURIComponent(token)}">
+          <button type="submit"${disabled || !faq ? " disabled" : ""}>${disabled ? "Marked wrong" : "Mark wrong"}</button>
+        </form>
+      </article>`;
+    }).join("");
+    response.type("html").send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FAQ corrections</title><style>
+      body{font:16px/1.5 system-ui,sans-serif;max-width:820px;margin:40px auto;padding:0 20px;color:#18352d;background:#f7f4ee}
+      article{background:#fff;border:1px solid #ddd6ca;border-radius:12px;padding:18px;margin:16px 0}button{background:#218363;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:700}button:disabled{background:#999}
+    </style></head><body><h1>FAQ corrections</h1><p>Last 20 FAQ auto-replies.</p>${rows || "<p>No FAQ auto-replies recorded yet.</p>"}</body></html>`);
+  } catch (error) {
+    response.status(502).type("html").send(`<h1>Could not load corrections</h1><p>${escapeHtml(errorMessage(error))}</p>`);
+  }
 });
 
 app.get("/api/businesses/:businessId/media", (request, response) => {

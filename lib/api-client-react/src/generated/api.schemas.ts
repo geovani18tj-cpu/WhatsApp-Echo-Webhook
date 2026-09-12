@@ -73,6 +73,7 @@ export interface Faq {
   question: string;
   answer: string;
   triggers: string[];
+  active: boolean;
   created_at: string;
 }
 

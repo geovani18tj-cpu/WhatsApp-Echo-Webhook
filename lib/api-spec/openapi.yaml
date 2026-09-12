@@ -107,6 +107,20 @@ paths:
         - { name: faqId, in: path, required: true, schema: { type: string, format: uuid } }
       responses:
         "204": { description: Deleted }
+  /businesses/{businessId}/faqs/{faqId}/disable:
+    post:
+      operationId: disableFaq
+      tags: [faq]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/BusinessId" }
+        - { name: faqId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Disabled
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/Faq" } }
+        "404": { description: Not found, content: { application/json: { schema: { $ref: "#/components/schemas/ErrorStatus" } } } }
   /businesses/{businessId}/media:
     get:
       operationId: listMedia
@@ -237,13 +251,14 @@ components:
         digest_hour: { type: integer, minimum: 0, maximum: 23 }
     Faq:
       type: object
-      required: [id, business_id, question, answer, triggers, created_at]
+      required: [id, business_id, question, answer, triggers, active, created_at]
       properties:
         id: { type: string, format: uuid }
         business_id: { type: string, format: uuid }
         question: { type: string }
         answer: { type: string }
         triggers: { type: array, items: { type: string } }
+        active: { type: boolean }
         created_at: { type: string }
     FaqInput:
       type: object

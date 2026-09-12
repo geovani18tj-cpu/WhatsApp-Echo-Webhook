@@ -544,6 +544,73 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getDeleteFaqMutationOptions(options));
     }
 
+export const getDisableFaqUrl = (businessId: string,
+    faqId: string,) => {
+
+
+
+
+  return `/api/businesses/${businessId}/faqs/${faqId}/disable`
+}
+
+export const disableFaq = async (businessId: string,
+    faqId: string, options?: Parameters<typeof customFetch>[1]): Promise<Faq> => {
+
+  return customFetch<Faq>(getDisableFaqUrl(businessId,faqId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getDisableFaqMutationOptions = <TError = ErrorType<ErrorStatus>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disableFaq>>, TError,{businessId: string;faqId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof disableFaq>>, TError,{businessId: string;faqId: string}, TContext> => {
+
+const mutationKey = ['disableFaq'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disableFaq>>, {businessId: string;faqId: string}> = (props) => {
+          const {businessId,faqId} = props ?? {};
+
+          return  disableFaq(businessId,faqId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisableFaqMutationResult = NonNullable<Awaited<ReturnType<typeof disableFaq>>>
+
+    export type DisableFaqMutationError = ErrorType<ErrorStatus>
+
+    export const useDisableFaq = <TError = ErrorType<ErrorStatus>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disableFaq>>, TError,{businessId: string;faqId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof disableFaq>>,
+        TError,
+        {businessId: string;faqId: string},
+        TContext
+      > => {
+      return useMutation(getDisableFaqMutationOptions(options));
+    }
+
 export const getListMediaUrl = (businessId: string,) => {
 
 

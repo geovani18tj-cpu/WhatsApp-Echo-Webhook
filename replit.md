@@ -25,7 +25,11 @@ Protected multi-business inbox automation with FAQ and private media replies.
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/api-server/src/index.ts` — Express API, shared Meta webhooks, image OCR escalation, protected admin routes, and the server-rendered FAQ corrections page.
+- `supabase/schema.sql` — source-of-truth database schema, including active FAQ controls and matched FAQ event references.
+- `supabase/demo_seed.sql` — optional non-secret demo business, FAQs, and media metadata.
+- `lib/api-spec/openapi.yaml` — JSON API contract used to generate shared clients.
+- `artifacts/whatsapp-business/src/` — React command centre and admin interface.
 
 ## Architecture decisions
 
