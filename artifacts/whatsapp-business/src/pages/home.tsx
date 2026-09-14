@@ -10,6 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { DelChat, useDelDraft, type DraftKnowledgeProps, type Proposal } from "@/components/draft-studio";
 import { Logo } from "@/components/logo";
+import { DelAvatar } from "@/components/del-avatar";
 
 type Conversation = {
   id: string;
@@ -711,14 +712,20 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="wa-rise mb-5 rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] px-5 py-4 shadow-[0_10px_32px_rgba(73,60,46,0.04)] sm:flex sm:items-center sm:justify-between sm:gap-6" style={{ animationDelay: "40ms" }}>
-            <div className="mb-3 sm:mb-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Today at a glance</p>
-              <p className="mt-1 text-xs text-[#85847d]">Across WhatsApp and Instagram.</p>
+          <section className="wa-rise mb-5 rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] px-5 py-4 shadow-[0_10px_32px_rgba(73,60,46,0.04)]" style={{ animationDelay: "40ms" }}>
+            <div className="sm:flex sm:items-center sm:justify-between sm:gap-6">
+              <div className="mb-3 sm:mb-0 flex items-center gap-2.5">
+                <DelAvatar size={22} />
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a29a91]">Del's morning digest</p>
+                  <p className="mt-1 text-xs text-[#85847d]">Across WhatsApp and Instagram.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 sm:min-w-[430px]">
+                {[{ value: "18", label: "conversations" }, { value: "11", label: "replied" }, { value: "3", label: "need you" }].map((item) => <div key={item.label} className="rounded-xl bg-[#f8f4ef] px-3 py-2.5 text-center"><p className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.06em] text-[#2e5947]">{item.value}</p><p className="mt-0.5 text-[10px] text-[#918c84]">{item.label}</p></div>)}
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:min-w-[430px]">
-              {[{ value: "18", label: "conversations" }, { value: "11", label: "replied" }, { value: "3", label: "need you" }].map((item) => <div key={item.label} className="rounded-xl bg-[#f8f4ef] px-3 py-2.5 text-center"><p className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-xl font-bold tracking-[-0.06em] text-[#2e5947]">{item.value}</p><p className="mt-0.5 text-[10px] text-[#918c84]">{item.label}</p></div>)}
-            </div>
+            <p className="mt-3 text-right text-[10px] font-bold text-[#a29a91]">— Del</p>
           </section>
 
           <section className="wa-rise grid gap-4 lg:grid-cols-[minmax(210px,0.85fr)_minmax(410px,1.65fr)_minmax(260px,0.92fr)]" style={{ animationDelay: "70ms" }}>
@@ -840,6 +847,7 @@ export default function Home() {
                   setInput={delDraft.setInput}
                   onSend={delDraft.handleSend}
                   isPending={delDraft.isPending}
+                  pulse={delDraft.pulse}
                 />
               </div>
             )}

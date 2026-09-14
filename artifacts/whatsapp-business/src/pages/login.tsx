@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { Logo } from "@/components/logo";
+import { DelAvatar } from "@/components/del-avatar";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -24,22 +25,26 @@ export default function Login() {
           <Logo light />
           
           <div className="mt-32">
+            <div className="mb-5 flex items-center gap-3">
+              <DelAvatar size={32} light />
+              <p className="text-sm font-bold text-[#c2f2da]">Hi, I'm Del — your business's AI assistant.</p>
+            </div>
             <h1 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-4xl font-bold leading-[1.1] tracking-[-0.04em] text-white">
               Your customers' messages, answered the way you'd answer them.
             </h1>
-            
+
             <ul className="mt-10 space-y-5 text-[#a3b3ac] text-sm">
               <li className="flex gap-4 items-start">
                 <CheckCircle2 size={20} className="text-[#3fc192] shrink-0 mt-0.5" />
-                <span>Same WhatsApp number your customers already have</span>
+                <span>I work from the same WhatsApp number your customers already have</span>
               </li>
               <li className="flex gap-4 items-start">
                 <CheckCircle2 size={20} className="text-[#3fc192] shrink-0 mt-0.5" />
-                <span>Nothing goes out that you didn't write yourself</span>
+                <span>I never send anything you didn't write and approve yourself</span>
               </li>
               <li className="flex gap-4 items-start">
                 <CheckCircle2 size={20} className="text-[#3fc192] shrink-0 mt-0.5" />
-                <span>One inbox, WhatsApp and Instagram side by side</span>
+                <span>One inbox — WhatsApp and Instagram side by side</span>
               </li>
             </ul>
           </div>

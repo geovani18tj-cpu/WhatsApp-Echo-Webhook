@@ -15,12 +15,20 @@ import {
   Play,
   Clock3,
   AlertTriangle,
+  TrendingUp,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { DelAvatar } from "@/components/del-avatar";
 
 // Founding-offer inventory. This is a real, honest count Geo edits by hand as
 // spots are claimed — never a simulated or auto-decrementing countdown.
 const FOUNDING_SPOTS_REMAINING = 5;
+
+// TODO(Geo): once you have a real, sourced, current Jamaican part-time day-rate
+// figure you're confident citing, set this (e.g. "Del costs less than one
+// part-time shift a month.") and it renders above the pricing cards. Leave
+// null until then — never invent or guess a number here.
+const PART_TIME_SHIFT_COMPARISON: string | null = null;
 
 type Currency = "JMD" | "USD";
 
@@ -86,12 +94,16 @@ const DEMO_HOLD_MS = 4200;
 function DemoChatWidget() {
   const [visibleCount, setVisibleCount] = useState(2);
   const [playing, setPlaying] = useState(true);
+  const [pulse, setPulse] = useState(0);
 
   useEffect(() => {
     if (!playing) return;
     const atEnd = visibleCount >= DEMO_SCRIPT.length;
     const timer = setTimeout(() => {
       setVisibleCount((current) => (atEnd ? 2 : current + 1));
+      // Del "sends" something on every step but the customer's own messages.
+      const next = DEMO_SCRIPT[atEnd ? 1 : visibleCount];
+      if (next && next.kind !== "customer") setPulse((p) => p + 1);
     }, atEnd ? DEMO_HOLD_MS : DEMO_STEP_MS);
     return () => clearTimeout(timer);
   }, [visibleCount, playing]);
@@ -136,7 +148,7 @@ function DemoChatWidget() {
                         </div>
                       ) : event.text}
                       <p className="mt-1 text-[9px] text-right text-[#699c86] flex items-center justify-end gap-1">
-                        <CheckCircle2 size={10} /> {event.tag}
+                        <DelAvatar size={12} pulse={pulse} /> {event.tag}
                       </p>
                     </div>
                   </div>
@@ -154,9 +166,13 @@ function DemoChatWidget() {
             }
             return (
               <div key={i} className="wa-rise mt-2 rounded-2xl border border-dashed border-[#c7bcae] bg-white/70 p-3.5 text-center">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-[#a29a91]">Sample day-end digest</p>
+                <div className="flex items-center justify-center gap-1.5">
+                  <DelAvatar size={14} pulse={pulse} />
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-[#a29a91]">Sample day-end digest</p>
+                </div>
                 <p className="mt-1.5 text-[15px] font-bold text-[#213b30]">47 messages · 39 handled · 8 need you</p>
                 <p className="mt-1 text-[10px] text-[#918c84]">Illustrative — every business's numbers will differ.</p>
+                <p className="mt-2 text-[10px] font-bold text-[#5c675f]">— Del</p>
               </div>
             );
           })}
@@ -285,15 +301,18 @@ export default function Landing() {
         <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28 px-5 md:px-8">
           <div className="mx-auto max-w-[1200px] grid md:grid-cols-2 gap-12 md:gap-20 items-center">
             <div className="wa-rise md:pr-10">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#d8e4dc] bg-[#eef7f0] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.15em] text-[#2a7a5d]">
-                <MessageCircle size={14} fill="currentColor" />
-                <span>WhatsApp + Instagram inbox</span>
+              <div className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-[#d8e4dc] bg-[#eef7f0] pl-2 pr-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-[#2a7a5d]">
+                <DelAvatar size={22} />
+                <span>Meet Del — an AI assistant</span>
               </div>
               <h1 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[clamp(40px,5vw,64px)] font-bold leading-[1.05] tracking-[-0.05em] text-[#213b30]">
-                Never miss another WhatsApp order.
+                Meet Del.
               </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#59635e]">
-                You're answering the same price and hours question for the twentieth time today, while a real order sits three messages further down, unread. Delegate sends the price list, answers what you've approved, and only puts your phone in your hand for what actually needs you.
+              <p className="mt-5 max-w-2xl text-xl leading-relaxed text-[#38584b] font-semibold">
+                Your business's first AI hire — the assistant who never guesses, never sleeps, and never oversteps.
+              </p>
+              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-[#59635e]">
+                You're answering the same price and hours question for the twentieth time today, while a real order sits three messages further down, unread. Del sends the price list, answers what you've approved, and only puts your phone in your hand for what actually needs you.
               </p>
 
               <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -344,14 +363,14 @@ export default function Landing() {
               <h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[clamp(28px,4vw,36px)] font-bold tracking-[-0.04em] text-[#213b30]">
                 How it works
               </h2>
-              <p className="mt-3 text-sm text-[#777b75]">You stay in control at every step.</p>
+              <p className="mt-3 text-sm text-[#777b75]">Del narrates it the way it actually happens.</p>
             </div>
             <div className="grid sm:grid-cols-3 gap-8 relative">
               <div className="hidden sm:block absolute top-6 left-[16%] right-[16%] h-[1px] bg-gradient-to-r from-transparent via-[#d8cec3] to-transparent" />
               {[
-                { title: "Load your price list and FAQs", desc: "Upload what you already have. Nothing is answered until you've approved it." },
-                { title: "Del answers what you approved", desc: "Word for word how you'd say it — never a guess, never something you didn't put there yourself." },
-                { title: "Anything uncertain comes to you", desc: "Del hands off the moment it isn't sure, straight to your WhatsApp, no guessing on its part." },
+                { title: "Load your price list and FAQs", desc: "“I'll only ever send what you approve. Let's start with your price list and FAQs — your number and page stay exactly as they are.”" },
+                { title: "Del answers what you approved", desc: "“From there, I'll answer the questions you get every day — word for word how you'd say it.”" },
+                { title: "Anything uncertain comes to you", desc: "“Anything I'm not sure about, I bring straight to you. No guessing on my part.”" },
               ].map((step, i) => (
                 <div key={step.title} className="relative z-10 flex flex-col items-center text-center">
                   <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#fffdfa] border border-[#e5dbd1] text-lg font-bold text-[#1c775b] shadow-sm mb-5">
@@ -359,6 +378,34 @@ export default function Landing() {
                   </div>
                   <h3 className="text-lg font-bold text-[#213b30] mb-2">{step.title}</h3>
                   <p className="text-sm text-[#777b75] leading-relaxed max-w-[260px]">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* HOW DEL THINKS */}
+        <section className="py-20 px-5 lg:px-8 bg-[#faf7f3] border-t border-[#eee7df]">
+          <div className="mx-auto max-w-[1100px]">
+            <div className="text-center mb-14 flex flex-col items-center">
+              <DelAvatar size={36} className="mb-4" />
+              <h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[clamp(28px,4vw,36px)] font-bold tracking-[-0.04em] text-[#213b30]">
+                How Del thinks
+              </h2>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { icon: ShieldCheck, title: "Never oversteps", desc: "If it isn't in your approved facts, Del doesn't guess — it hands off instead." },
+                { icon: Clock3, title: "Saves time", desc: "Answers the tenth ‘wah di price stay’ the same instant as the first." },
+                { icon: MessageCircle, title: "Kingston-fluent", desc: "Recognizes phrasing like ‘wah time unu close’ — matched the way it's actually written to you." },
+                { icon: TrendingUp, title: "Grows with the business", desc: "Approve a new fact today, and Del uses it from the very next message." },
+              ].map((pillar) => (
+                <div key={pillar.title} className="rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] p-6">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#eaf4ee] text-[#1c775b] mb-4">
+                    <pillar.icon size={19} />
+                  </div>
+                  <h3 className="text-sm font-bold text-[#213b30] mb-2">{pillar.title}</h3>
+                  <p className="text-sm leading-relaxed text-[#777b75]">{pillar.desc}</p>
                 </div>
               ))}
             </div>
@@ -421,6 +468,9 @@ export default function Landing() {
                 Simple pricing
               </h2>
               <p className="mt-3 text-sm text-[#9aa8a1]">No hidden fees.</p>
+              {PART_TIME_SHIFT_COMPARISON && (
+                <p className="mt-4 text-sm font-bold text-[#c2f2da]">{PART_TIME_SHIFT_COMPARISON}</p>
+              )}
             </div>
 
             <div className="mb-10 flex justify-center">

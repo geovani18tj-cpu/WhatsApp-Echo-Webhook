@@ -4,7 +4,8 @@ import {
   useCreateFaq,
   useSaveBusinessFact,
 } from "@workspace/api-client-react";
-import { Bot, Send, Sparkles, Info } from "lucide-react";
+import { Send, Info } from "lucide-react";
+import { DelAvatar } from "@/components/del-avatar";
 
 type Message = {
   role: "user" | "assistant";
@@ -65,6 +66,8 @@ export function useDelDraft({ setSavedNotice, onApproved }: UseDelDraftArgs) {
 
   const [input, setInput] = useState("");
   const [proposalFiles, setProposalFiles] = useState<Record<string, File | undefined>>({});
+  // Increment whenever Del sends something, to trigger the avatar's arrow nudge.
+  const [pulse, setPulse] = useState(0);
 
   const draftMutation = useDraftBusinessAssistantProposals({
     request: token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
@@ -91,6 +94,7 @@ export function useDelDraft({ setSavedNotice, onApproved }: UseDelDraftArgs) {
           role: "assistant",
           content: "You are in preview mode. Provide a `?token=` query parameter to connect to the real API."
         }]);
+        setPulse((p) => p + 1);
       }, 600);
       return;
     }
@@ -109,6 +113,7 @@ export function useDelDraft({ setSavedNotice, onApproved }: UseDelDraftArgs) {
     }, {
       onSuccess: (data) => {
         setMessages(m => [...m, { role: "assistant", content: data.reply }]);
+        setPulse((p) => p + 1);
         if (data.proposals && data.proposals.length > 0) {
           const newProposals = data.proposals.map(p => ({
             ...p,
@@ -130,7 +135,7 @@ export function useDelDraft({ setSavedNotice, onApproved }: UseDelDraftArgs) {
       setTimeout(() => {
         setProposals(prev => prev.map(x => x.id === p.id ? { ...x, status: "saved" } : x));
         onApproved(p, proposalFiles[p.id]);
-        setSavedNotice("Preview only — no data was saved");
+        setSavedNotice("Preview only — Del didn't actually learn this");
         setTimeout(() => setSavedNotice(""), 3000);
       }, 800);
       return;
@@ -143,7 +148,7 @@ export function useDelDraft({ setSavedNotice, onApproved }: UseDelDraftArgs) {
         onSuccess: () => {
           setProposals(prev => prev.map(x => x.id === p.id ? { ...x, status: "saved" } : x));
           onApproved(p);
-          setSavedNotice("Fact approved");
+          setSavedNotice("Got it — Del will use this from now on");
           setTimeout(() => setSavedNotice(""), 3000);
         },
         onError: () => {
@@ -162,7 +167,7 @@ export function useDelDraft({ setSavedNotice, onApproved }: UseDelDraftArgs) {
         onSuccess: () => {
           setProposals(prev => prev.map(x => x.id === p.id ? { ...x, status: "saved" } : x));
           onApproved(p);
-          setSavedNotice("Approved answer saved");
+          setSavedNotice("Got it — Del can answer this from now on");
           setTimeout(() => setSavedNotice(""), 3000);
         },
         onError: () => {
@@ -187,7 +192,7 @@ export function useDelDraft({ setSavedNotice, onApproved }: UseDelDraftArgs) {
         if (!response.ok) throw new Error("Media upload failed");
         setProposals(prev => prev.map(x => x.id === p.id ? { ...x, status: "saved" } : x));
         onApproved(p, file);
-        setSavedNotice("File approved and saved");
+        setSavedNotice("Got it — Del can share this from now on");
         setTimeout(() => setSavedNotice(""), 3000);
       }).catch(() => {
         setProposals(prev => prev.map(x => x.id === p.id ? { ...x, status: "error" } : x));
@@ -213,6 +218,7 @@ export function useDelDraft({ setSavedNotice, onApproved }: UseDelDraftArgs) {
     setInput,
     handleSend,
     isPending: draftMutation.isPending,
+    pulse,
     proposals,
     proposalFiles,
     setProposalFile,
@@ -228,9 +234,10 @@ export type DelChatProps = {
   setInput: (value: string) => void;
   onSend: () => void;
   isPending: boolean;
+  pulse: number;
 };
 
-export function DelChat({ token, messages, input, setInput, onSend, isPending }: DelChatProps) {
+export function DelChat({ token, messages, input, setInput, onSend, isPending, pulse }: DelChatProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -243,9 +250,7 @@ export function DelChat({ token, messages, input, setInput, onSend, isPending }:
     <div className="flex h-full min-h-[700px] flex-col wa-rise bg-[#fffdfa] rounded-2xl border border-[#e5dbd1] shadow-[0_10px_32px_rgba(73,60,46,0.05)] overflow-hidden">
       <div className="p-5 border-b border-[#eee7df] flex justify-between items-center bg-white">
         <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#f4e6fb] text-[#5c3e73]">
-            <Sparkles size={20} strokeWidth={1.8} />
-          </div>
+          <DelAvatar size={40} pulse={pulse} />
           <div>
             <h2 className="font-['Space_Grotesk'] text-lg font-bold tracking-[-0.04em] text-[#293d33]">Del</h2>
             <p className="text-xs text-[#85847d] mt-0.5">Your business's AI assistant</p>
@@ -261,23 +266,26 @@ export function DelChat({ token, messages, input, setInput, onSend, isPending }:
       <div ref={scrollRef} className="flex-1 p-5 overflow-y-auto wa-scroll space-y-6">
         {messages.map((m, i) => (
           <div key={i} className={`flex gap-3 max-w-[85%] ${m.role === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
-            <div className={`shrink-0 h-8 w-8 rounded-full grid place-items-center text-xs font-bold ${m.role === 'user' ? 'bg-[#d8c7ad] text-[#684f32]' : 'bg-[#1c775b] text-white'}`}>
-              {m.role === 'user' ? 'KS' : <Bot size={16} />}
-            </div>
+            {m.role === 'user' ? (
+              <div className="shrink-0 h-8 w-8 rounded-full grid place-items-center text-xs font-bold bg-[#d8c7ad] text-[#684f32]">KS</div>
+            ) : (
+              <DelAvatar size={32} className="shrink-0" />
+            )}
             <div className={`p-3.5 rounded-2xl text-[13px] leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-[#1c775b] text-white rounded-tr-sm' : 'bg-white border border-[#eee7df] text-[#3a4841] rounded-tl-sm'}`}>
               {m.content}
             </div>
           </div>
         ))}
         {isPending && (
-          <div className="flex gap-3 max-w-[85%]">
-            <div className="shrink-0 h-8 w-8 rounded-full grid place-items-center bg-[#1c775b] text-white">
-              <Bot size={16} />
-            </div>
-            <div className="p-4 rounded-2xl bg-white border border-[#eee7df] rounded-tl-sm flex gap-1 items-center">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#cbd9d1] animate-bounce" style={{animationDelay: '0ms'}} />
-              <span className="h-1.5 w-1.5 rounded-full bg-[#cbd9d1] animate-bounce" style={{animationDelay: '150ms'}} />
-              <span className="h-1.5 w-1.5 rounded-full bg-[#cbd9d1] animate-bounce" style={{animationDelay: '300ms'}} />
+          <div className="flex items-center gap-3 max-w-[85%]">
+            <DelAvatar size={32} className="shrink-0" />
+            <div className="p-4 rounded-2xl bg-white border border-[#eee7df] rounded-tl-sm flex items-center gap-2">
+              <span className="text-xs font-semibold text-[#85847d]">Del is typing</span>
+              <span className="flex gap-1 items-center">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#cbd9d1] animate-bounce" style={{animationDelay: '0ms'}} />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#cbd9d1] animate-bounce" style={{animationDelay: '150ms'}} />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#cbd9d1] animate-bounce" style={{animationDelay: '300ms'}} />
+              </span>
             </div>
           </div>
         )}

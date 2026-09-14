@@ -401,7 +401,8 @@ async function escalateToOwner(
 ): Promise<"owner_escalation" | "owner_unavailable"> {
   const owner = stringValue(business.owner_whatsapp_number);
   if (!owner || (channel === "whatsapp" && phoneDigits(owner) === phoneDigits(sender))) return "owner_unavailable";
-  await sendText(business, "whatsapp", phoneDigits(owner), `New ${channel} message needs a reply from ${sender}: ${description}`);
+  const channelLabel = channel === "whatsapp" ? "WhatsApp" : "Instagram";
+  await sendText(business, "whatsapp", phoneDigits(owner), `Del handed this to you — ${description}\n\nFrom ${sender} on ${channelLabel}. — Del`);
   return "owner_escalation";
 }
 
@@ -811,7 +812,8 @@ app.post("/api/businesses/:businessId/faqs/:faqId/disable", (request, response) 
     }
     if (request.accepts(["html", "json"]) === "html") {
       const token = getQueryString(request, "token");
-      response.redirect(`/corrections/${encodeURIComponent(request.params.businessId)}${token ? `?token=${encodeURIComponent(token)}` : ""}`);
+      const query = token ? `?token=${encodeURIComponent(token)}&corrected=1` : "?corrected=1";
+      response.redirect(`/corrections/${encodeURIComponent(request.params.businessId)}${query}`);
       return;
     }
     response.json(rows[0]);
@@ -822,6 +824,7 @@ app.get("/corrections/:businessId", async (request, response) => {
   if (!requireAdmin(request, response)) return;
   const businessId = request.params.businessId;
   const token = getQueryString(request, "token") ?? "";
+  const justCorrected = getQueryString(request, "corrected") === "1";
   try {
     const events = await supabase<Row[]>(
       `/rest/v1/inbound_message_events?business_id=eq.${encodeURIComponent(businessId)}&outcome=eq.faq_reply&matched_faq_id=not.is.null&select=id,message_text,matched_faq_id,created_at&order=created_at.desc&limit=20`,
@@ -839,14 +842,15 @@ app.get("/corrections/:businessId", async (request, response) => {
         <p><strong>Question asked</strong><br>${escapeHtml(event.message_text || "(no text recorded)")}</p>
         <p><strong>Answer sent</strong><br>${escapeHtml(faq?.answer || "(FAQ no longer available)")}</p>
         <form method="post" action="/api/businesses/${encodeURIComponent(businessId)}/faqs/${encodeURIComponent(faqId)}/disable?token=${encodeURIComponent(token)}">
-          <button type="submit"${disabled || !faq ? " disabled" : ""}>${disabled ? "Marked wrong" : "Mark wrong"}</button>
+          <button type="submit"${disabled || !faq ? " disabled" : ""}>${disabled ? "Del won't say that again" : "Mark wrong — teach Del"}</button>
         </form>
       </article>`;
     }).join("");
-    response.type("html").send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FAQ corrections</title><style>
+    response.type("html").send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Teaching Del</title><style>
       body{font:16px/1.5 system-ui,sans-serif;max-width:820px;margin:40px auto;padding:0 20px;color:#18352d;background:#f7f4ee}
       article{background:#fff;border:1px solid #ddd6ca;border-radius:12px;padding:18px;margin:16px 0}button{background:#218363;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:700}button:disabled{background:#999}
-    </style></head><body><h1>FAQ corrections</h1><p>Last 20 FAQ auto-replies.</p>${rows || "<p>No FAQ auto-replies recorded yet.</p>"}</body></html>`);
+      .confirm{background:#eaf4ee;border:1px solid #bfe0cd;border-radius:10px;padding:12px 16px;font-weight:700;color:#1c775b}
+    </style></head><body><h1>Teaching Del</h1><p>Last 20 FAQ auto-replies. Mark one wrong and Del stops using it right away.</p>${justCorrected ? `<p class="confirm">Got it — Del won't say that again.</p>` : ""}${rows || "<p>No FAQ auto-replies recorded yet.</p>"}</body></html>`);
   } catch (error) {
     response.status(502).type("html").send(`<h1>Could not load corrections</h1><p>${escapeHtml(errorMessage(error))}</p>`);
   }

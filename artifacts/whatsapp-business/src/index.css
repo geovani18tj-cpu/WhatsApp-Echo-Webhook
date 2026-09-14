@@ -72,4 +72,14 @@
   
   @keyframes wa-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   .wa-rise { animation: wa-rise .45s ease-out both; }
+
+  /* DelAvatar: a slow idle blink on the eyes, and a one-shot forward nudge on
+     the arrow when Del sends something. Understated on purpose. */
+  @keyframes del-blink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.12); } }
+  .del-avatar-eye { animation: del-blink 5.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes del-arrow-nudge { 0% { transform: translateX(0); } 45% { transform: translateX(3px); } 100% { transform: translateX(0); } }
+  .del-avatar-arrow-nudge { animation: del-arrow-nudge .5s ease-out; transform-box: fill-box; transform-origin: center; }
+  @media (prefers-reduced-motion: reduce) {
+    .del-avatar-eye, .del-avatar-arrow-nudge { animation: none; }
+  }
 }
