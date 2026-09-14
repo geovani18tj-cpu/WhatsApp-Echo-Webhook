@@ -167,11 +167,15 @@ function parseAssistantOutput(text: string): { reply: string; proposals: Assista
   return { reply: reply.slice(0, 4000), proposals };
 }
 
-async function draftBusinessProposals(message: string, history: AssistantHistoryMessage[]): Promise<{ reply: string; proposals: AssistantDraft[] }> {
+function getAnthropicClient(): Anthropic {
   const apiKey = process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY;
   const baseURL = process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
   if (!apiKey || !baseURL) throw new Error("Replit-managed Anthropic is not configured");
-  const client = new Anthropic({ apiKey, baseURL });
+  return new Anthropic({ apiKey, baseURL });
+}
+
+async function draftBusinessProposals(message: string, history: AssistantHistoryMessage[]): Promise<{ reply: string; proposals: AssistantDraft[] }> {
+  const client = getAnthropicClient();
   const result = await client.messages.create({
     model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5",
     max_tokens: 8192,
@@ -201,6 +205,68 @@ Rules:
   });
   const text = result.content.filter((block) => block.type === "text").map((block) => block.text).join("\n");
   return parseAssistantOutput(text);
+}
+
+type IncomingClassification =
+  | { action: "answer"; faqId: string }
+  | { action: "collect"; question: string }
+  | { action: "escalate" };
+
+function parseClassificationOutput(text: string, faqIds: Set<string>): IncomingClassification {
+  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  const parsed = JSON.parse(cleaned) as unknown;
+  if (!isRecord(parsed)) throw new Error("Claude returned an invalid classification response");
+  if (parsed.action === "answer") {
+    const faqId = stringValue(parsed.faqId);
+    if (faqId && faqIds.has(faqId)) return { action: "answer", faqId };
+    return { action: "escalate" };
+  }
+  if (parsed.action === "collect") {
+    const question = stringValue(parsed.question)?.slice(0, 500);
+    if (question) return { action: "collect", question };
+    return { action: "escalate" };
+  }
+  return { action: "escalate" };
+}
+
+// Classifies a message that did not exactly match an FAQ trigger. Never generates
+// customer-facing facts itself: "answer" must point at an existing approved FAQ,
+// and "collect" may only ask a question, never state hours/prices/availability.
+// Any ambiguity, parsing failure, or missing Anthropic config falls back to escalate.
+async function classifyIncomingMessage(text: string, faqs: Row[]): Promise<IncomingClassification> {
+  if (!faqs.length) return { action: "escalate" };
+  const client = getAnthropicClient();
+  const faqIds = new Set(faqs.map((faq) => stringValue(faq.id)).filter((id): id is string => Boolean(id)));
+  const faqList = faqs.map((faq) => ({
+    id: stringValue(faq.id),
+    question: stringValue(faq.question),
+    triggers: arrayStrings(faq.triggers),
+  }));
+  const result = await client.messages.create({
+    model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5",
+    max_tokens: 1024,
+    system: `A customer sent a message that did not exactly match any approved FAQ trigger phrase. Decide what should happen next.
+Return ONLY valid JSON in exactly one of these shapes:
+{"action":"answer","faqId":"<id from the approved FAQ list below>"}
+{"action":"collect","question":"<one short question to ask the customer>"}
+{"action":"escalate"}
+
+Approved FAQs (JSON):
+${JSON.stringify(faqList)}
+
+Rules:
+- Use "answer" only when the customer's message is clearly asking one of the approved FAQ questions above, just worded differently. Pick the single closest faqId. Never invent an answer and never pick an id not in the list.
+- Use "collect" only when the message is missing information needed to route it (for example, they ask about delivery but did not say where) and asking one short, neutral question would let you help next time. The question must never state or imply a fact — no hours, prices, areas, availability, or policies. Just ask what's missing.
+- Use "escalate" for anything else: new topics, complaints, orders, or anything you are not confident about.
+- If you are unsure between two actions, choose escalate.`,
+    messages: [{ role: "user", content: text }],
+  });
+  const responseText = result.content.filter((block) => block.type === "text").map((block) => block.text).join("\n");
+  try {
+    return parseClassificationOutput(responseText, faqIds);
+  } catch {
+    return { action: "escalate" };
+  }
 }
 
 function allowedBusinessFields(input: Row, includeSecrets: boolean): Row {
@@ -409,7 +475,25 @@ async function processIncoming(event: {
           matchedFaqId = stringValue(faq.id);
           outcome = "faq_reply";
         } else {
-          outcome = await escalateToOwner(business, channel, sender, text);
+          const classification = await classifyIncomingMessage(text, faqs).catch((error) => {
+            log("incoming message classification failed", { channel, messageId, businessId: business.id, error: errorMessage(error) });
+            return { action: "escalate" as const };
+          });
+          if (classification.action === "answer") {
+            const matched = faqs.find((item) => stringValue(item.id) === classification.faqId);
+            if (matched) {
+              await sendText(business, channel, sender, stringValue(matched.answer) ?? "Thanks for your message.");
+              matchedFaqId = classification.faqId;
+              outcome = "faq_reply";
+            } else {
+              outcome = await escalateToOwner(business, channel, sender, text);
+            }
+          } else if (classification.action === "collect") {
+            await sendText(business, channel, sender, classification.question);
+            outcome = "collect_reply";
+          } else {
+            outcome = await escalateToOwner(business, channel, sender, text);
+          }
         }
       }
     }
