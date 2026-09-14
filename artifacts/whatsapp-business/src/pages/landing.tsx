@@ -1,33 +1,249 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { 
-  MessageCircle, 
-  CheckCircle2, 
+import {
+  MessageCircle,
+  CheckCircle2,
   ArrowRight,
   ShieldCheck,
-  Zap,
-  Image as ImageIcon,
-  Clock,
-  Instagram,
   FileText,
   Menu,
-  X
+  X,
+  ChevronDown,
+  Ban,
+  Smartphone,
+  MousePointerClick,
+  Play,
+  Clock3,
+  AlertTriangle,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 
+// Founding-offer inventory. This is a real, honest count Geo edits by hand as
+// spots are claimed — never a simulated or auto-decrementing countdown.
+const FOUNDING_SPOTS_REMAINING = 5;
+
+type Currency = "JMD" | "USD";
+
+const PLANS = [
+  {
+    id: "starter",
+    name: "Starter",
+    jmd: 7500,
+    usd: 49,
+    foundingJmd: 4500,
+    popular: false,
+    features: ["WhatsApp inbox", "Media library", "Approved FAQs", "Correction loop", "Morning digest"],
+  },
+  {
+    id: "plus",
+    name: "Plus",
+    jmd: 12500,
+    usd: 79,
+    foundingJmd: null as number | null,
+    popular: true,
+    features: ["Everything in Starter", "Instagram DMs", "One inbox, split by platform"],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    jmd: 20000,
+    usd: 129,
+    foundingJmd: null as number | null,
+    popular: false,
+    features: ["Everything in Plus", "Messenger", "A second connected account"],
+  },
+] as const;
+
+function formatPrice(amount: number, currency: Currency): string {
+  return currency === "JMD" ? `J$${amount.toLocaleString()}` : `US$${amount.toLocaleString()}`;
+}
+
+// The demo script below is illustrative — a fixed conversation showing how Del
+// actually behaves, not a log of real messages or a claim about real results.
+type DemoEvent =
+  | { kind: "customer"; text: string; time: string }
+  | { kind: "auto"; text: string; tag: string; media?: string }
+  | { kind: "escalate"; text: string }
+  | { kind: "digest" };
+
+const DEMO_SCRIPT: DemoEvent[] = [
+  { kind: "customer", text: "Good morning! Unu have di price list?", time: "08:42" },
+  { kind: "auto", text: "", tag: "Sent automatically · 08:42", media: "Wholesale_Prices.pdf" },
+  { kind: "customer", text: "Wah time unu close?", time: "08:44" },
+  { kind: "auto", text: "We're open Mon–Sat, 8am–5pm. Closed Sundays.", tag: "Answered automatically · 08:44" },
+  { kind: "customer", text: "Unu deliver a Portmore?", time: "08:45" },
+  { kind: "auto", text: "Yes — Kingston, St. Andrew & Portmore. Usually 45–75 min.", tag: "Answered automatically · 08:45" },
+  { kind: "customer", text: "Mi waan buy inna bulk, like 200 units. Wah di price stay?", time: "08:51" },
+  { kind: "auto", text: "Bulk pricing depends on quantity and delivery — let me get the owner to send you an exact number.", tag: "Collected for the owner · no price guessed" },
+  { kind: "customer", text: "Mi order neva reach yet an a two days now!", time: "08:58" },
+  { kind: "escalate", text: "Sent straight to the owner's phone — not answered automatically" },
+  { kind: "digest" },
+];
+
+const DEMO_STEP_MS = 2000;
+const DEMO_HOLD_MS = 4200;
+
+function DemoChatWidget() {
+  const [visibleCount, setVisibleCount] = useState(2);
+  const [playing, setPlaying] = useState(true);
+
+  useEffect(() => {
+    if (!playing) return;
+    const atEnd = visibleCount >= DEMO_SCRIPT.length;
+    const timer = setTimeout(() => {
+      setVisibleCount((current) => (atEnd ? 2 : current + 1));
+    }, atEnd ? DEMO_HOLD_MS : DEMO_STEP_MS);
+    return () => clearTimeout(timer);
+  }, [visibleCount, playing]);
+
+  const events = DEMO_SCRIPT.slice(0, visibleCount);
+
+  return (
+    <div className="relative max-w-[400px] w-full mx-auto lg:mx-0">
+      <div className="absolute -inset-0.5 rounded-[26px] bg-gradient-to-b from-[#e5dbd1] to-transparent opacity-50" />
+      <div className="relative rounded-[24px] border border-[#e5dbd1] bg-[#f2ede7] shadow-[0_24px_64px_rgba(73,60,46,0.12)] overflow-hidden flex flex-col">
+        <div className="flex items-center gap-3 bg-[#1c775b] px-4 py-3 text-white">
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-white/20 font-bold text-sm">C</div>
+          <div className="flex-1">
+            <p className="text-[13px] font-bold">Customer</p>
+            <p className="text-[10px] text-white/80">online</p>
+          </div>
+          <span className="flex items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-[9px] font-bold uppercase tracking-wider">
+            <Play size={9} fill="currentColor" /> Live demo
+          </span>
+        </div>
+        <div className="flex-1 min-h-[380px] p-4 space-y-3 text-[13px]">
+          {events.map((event, i) => {
+            if (event.kind === "customer") {
+              return (
+                <div key={i} className="flex justify-start wa-rise">
+                  <div className="rounded-2xl rounded-tl-sm bg-white px-3.5 py-2.5 text-[#26332d] shadow-sm max-w-[85%]">
+                    {event.text}
+                    <p className="mt-1 text-[9px] text-right text-[#9b958d]">{event.time}</p>
+                  </div>
+                </div>
+              );
+            }
+            if (event.kind === "auto") {
+              return (
+                <div key={i} className="flex justify-end wa-rise">
+                  <div className="max-w-[85%] flex flex-col items-end">
+                    <div className="rounded-2xl rounded-tr-sm bg-[#eaf6ee] px-3.5 py-2.5 text-[#1a4a38] shadow-sm">
+                      {event.media ? (
+                        <div className="flex items-center gap-2 mb-1 p-2 rounded-xl bg-white/60">
+                          <div className="h-8 w-8 bg-[#cde4d8] text-[#1c775b] rounded-lg grid place-items-center"><FileText size={16} /></div>
+                          <div className="text-[11px] font-bold">{event.media}</div>
+                        </div>
+                      ) : event.text}
+                      <p className="mt-1 text-[9px] text-right text-[#699c86] flex items-center justify-end gap-1">
+                        <CheckCircle2 size={10} /> {event.tag}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            if (event.kind === "escalate") {
+              return (
+                <div key={i} className="flex justify-center wa-rise">
+                  <div className="flex items-center gap-1.5 rounded-full bg-[#fdf0e6] px-3 py-1.5 text-[10px] font-bold text-[#a64a2b]">
+                    <AlertTriangle size={11} /> {event.text}
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <div key={i} className="wa-rise mt-2 rounded-2xl border border-dashed border-[#c7bcae] bg-white/70 p-3.5 text-center">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-[#a29a91]">Sample day-end digest</p>
+                <p className="mt-1.5 text-[15px] font-bold text-[#213b30]">47 messages · 39 handled · 8 need you</p>
+                <p className="mt-1 text-[10px] text-[#918c84]">Illustrative — every business's numbers will differ.</p>
+              </div>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={() => { setVisibleCount(2); setPlaying(true); }}
+          className="border-t border-[#e5dbd1] bg-white/70 py-2 text-center text-[10px] font-bold text-[#5c675f] transition hover:bg-white"
+        >
+          Replay demo
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FaqAccordionItem({
+  question,
+  answer,
+  open,
+  onToggle,
+}: {
+  question: string;
+  answer: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[#e5dbd1] bg-[#fffdfa]">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#238b68]"
+        aria-expanded={open}
+      >
+        <span className="text-sm font-bold text-[#213b30]">{question}</span>
+        <ChevronDown size={16} className={`shrink-0 text-[#9c958d] transition ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && <div className="border-t border-[#eee7df] px-5 py-4 text-sm leading-relaxed text-[#59635e]">{answer}</div>}
+    </div>
+  );
+}
+
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currency, setCurrency] = useState<Currency>("JMD");
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [showStickyCta, setShowStickyCta] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowStickyCta(window.scrollY > 560);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const starter = useMemo(() => PLANS.find((plan) => plan.id === "starter")!, []);
+
+  const faqs = [
+    {
+      question: "Won't my staff already handle it?",
+      answer: "They can — Delegate isn't trying to replace anyone. It catches what comes in while they're on a call, closed for the night, or just handling five other things at once, and only ever answers with facts you've approved. If every message already gets a same-minute reply today, you probably don't need this yet.",
+    },
+    {
+      question: "Don't customers want to talk to a real person?",
+      answer: "Most of them just want the price list at 11pm on a Sunday, not a conversation. When something actually needs a person — an order, a complaint, a question outside what you've approved — Delegate hands it straight to your phone instead of pretending to be one.",
+    },
+    {
+      question: "What if it says something wrong?",
+      answer: "It can't invent an answer. Del only ever repeats facts you typed and approved yourself — it doesn't guess prices, hours, stock, or availability. If a reply is ever wrong, it's because you approved it, and one tap turns it off.",
+    },
+    {
+      question: "Isn't this expensive for a small business?",
+      answer: `Starter is ${formatPrice(starter.jmd, "JMD")}/month — and the first ${FOUNDING_SPOTS_REMAINING} businesses lock in ${formatPrice(starter.foundingJmd ?? starter.jmd, "JMD")} for as long as they stay. Two weeks are free before you pay anything, and if it isn't saving you time, we'll remove it ourselves.`,
+    },
+  ];
 
   return (
     <div className="min-h-[100dvh] bg-[#fffdfa] font-['DM_Sans',ui-sans-serif,system-ui,sans-serif] text-foreground">
       <header className="sticky top-0 z-50 border-b border-[#e7ddd2] bg-[#fffdfa]/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between px-5 py-4 lg:px-8">
           <Logo />
-          
+
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-[#53665b]">
             <a href="#how-it-works" className="hover:text-[#1c775b] transition">How it works</a>
-            <a href="#features" className="hover:text-[#1c775b] transition">Features</a>
             <a href="#pricing" className="hover:text-[#1c775b] transition">Pricing</a>
+            <a href="#faq" className="hover:text-[#1c775b] transition">FAQ</a>
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
@@ -35,11 +251,11 @@ export default function Landing() {
               Log in
             </Link>
             <Link href="/login" className="rounded-xl bg-[#1c775b] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#145d46] shadow-[0_6px_16px_rgba(28,119,91,0.15)]">
-              Get started
+              Start free trial
             </Link>
           </div>
 
-          <button 
+          <button
             className="md:hidden relative z-50 p-2 -mr-2 text-[#53665b]"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
@@ -48,26 +264,25 @@ export default function Landing() {
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden absolute top-full left-0 right-0 bg-[#fffdfa] border-b border-[#e7ddd2] shadow-xl p-5 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
             <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-[#213b30] py-2">How it works</a>
-            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-[#213b30] py-2">Features</a>
             <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-[#213b30] py-2">Pricing</a>
+            <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-[#213b30] py-2">FAQ</a>
             <hr className="border-[#e7ddd2] my-2" />
             <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-base font-semibold text-[#213b30] py-2">
               Log in
             </Link>
             <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="mt-2 w-full text-center rounded-xl bg-[#1c775b] px-5 py-3.5 text-sm font-bold text-white shadow-md">
-              Get started
+              Start free for 2 weeks
             </Link>
           </div>
         )}
       </header>
 
       <main>
-        {/* Hero Section */}
-        <section className="relative overflow-hidden pt-16 pb-24 md:pt-24 md:pb-32 px-5 md:px-8">
+        {/* 1. HERO */}
+        <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28 px-5 md:px-8">
           <div className="mx-auto max-w-[1200px] grid md:grid-cols-2 gap-12 md:gap-20 items-center">
             <div className="wa-rise md:pr-10">
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#d8e4dc] bg-[#eef7f0] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.15em] text-[#2a7a5d]">
@@ -78,246 +293,280 @@ export default function Landing() {
                 Never miss another WhatsApp order.
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#59635e]">
-                Delegate auto-sends your price list, answers the questions you get every day, and only pings you for what actually needs you — on WhatsApp and Instagram, using the number and page you already have.
+                You're answering the same price and hours question for the twentieth time today, while a real order sits three messages further down, unread. Delegate sends the price list, answers what you've approved, and only puts your phone in your hand for what actually needs you.
               </p>
-              
+
               <div className="mt-10 flex flex-wrap items-center gap-4">
                 <Link href="/login" className="rounded-xl bg-[#1c775b] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#145d46] shadow-[0_8px_24px_rgba(28,119,91,0.2)]">
-                  Get started
+                  Start free for 2 weeks
                 </Link>
-                <a href="#how-it-works" className="rounded-xl bg-[#f4eee8] px-6 py-3.5 text-sm font-bold text-[#38584b] transition hover:bg-[#e7ddd2]">
-                  See how it works
+                <a href="#demo" className="inline-flex items-center gap-2 rounded-xl bg-[#f4eee8] px-6 py-3.5 text-sm font-bold text-[#38584b] transition hover:bg-[#e7ddd2]">
+                  <Play size={14} fill="currentColor" /> See it work in 60 seconds
                 </a>
               </div>
-
+              <p className="mt-4 text-xs font-semibold text-[#8a938c]">No card required to start. Same WhatsApp number — nothing to migrate.</p>
             </div>
 
-            {/* Chat Demo */}
-            <div className="wa-rise relative max-w-[400px] w-full mx-auto lg:mx-0" style={{ animationDelay: "150ms" }}>
-              <div className="absolute -inset-0.5 rounded-[26px] bg-gradient-to-b from-[#e5dbd1] to-transparent opacity-50"></div>
-              <div className="relative rounded-[24px] border border-[#e5dbd1] bg-[#f2ede7] shadow-[0_24px_64px_rgba(73,60,46,0.12)] overflow-hidden flex flex-col">
-                <div className="flex items-center gap-3 bg-[#1c775b] px-4 py-3 text-white">
-                  <div className="grid h-8 w-8 place-items-center rounded-full bg-white/20 font-bold text-sm">C</div>
-                  <div>
-                    <p className="text-[13px] font-bold">Customer</p>
-                    <p className="text-[10px] text-white/80">online</p>
-                  </div>
-                </div>
-                <div className="flex-1 p-4 space-y-4 text-[13px]">
-                  {/* Customer msg 1 */}
-                  <div className="flex justify-start">
-                    <div className="rounded-2xl rounded-tl-sm bg-white px-3.5 py-2.5 text-[#26332d] shadow-sm max-w-[85%]">
-                      Good morning! Unu have di price list?
-                      <p className="mt-1 text-[9px] text-right text-[#9b958d]">08:42</p>
-                    </div>
-                  </div>
-                  {/* Auto msg 1 */}
-                  <div className="flex justify-end">
-                    <div className="max-w-[85%] flex flex-col items-end">
-                      <div className="rounded-2xl rounded-tr-sm bg-[#eaf6ee] px-3.5 py-2.5 text-[#1a4a38] shadow-sm">
-                        <div className="flex items-center gap-2 mb-2 p-2 rounded-xl bg-white/60">
-                          <div className="h-8 w-8 bg-[#cde4d8] text-[#1c775b] rounded-lg grid place-items-center"><FileText size={16} /></div>
-                          <div className="text-[11px] font-bold">Wholesale_Prices.pdf</div>
-                        </div>
-                        <p className="mt-1 text-[9px] text-right text-[#699c86] flex items-center justify-end gap-1">
-                          <CheckCircle2 size={10} /> Sent automatically · 08:42
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Customer msg 2 */}
-                  <div className="flex justify-start">
-                    <div className="rounded-2xl rounded-tl-sm bg-white px-3.5 py-2.5 text-[#26332d] shadow-sm max-w-[85%]">
-                      Nice. Unu deliver a Portmore?
-                      <p className="mt-1 text-[9px] text-right text-[#9b958d]">08:45</p>
-                    </div>
-                  </div>
-                  {/* Auto msg 2 */}
-                  <div className="flex justify-end">
-                    <div className="max-w-[85%] flex flex-col items-end">
-                      <div className="rounded-2xl rounded-tr-sm bg-[#eaf6ee] px-3.5 py-2.5 text-[#1a4a38] shadow-sm">
-                        Yes — Kingston, St. Andrew & Portmore. Usually 45–75 min.
-                        <p className="mt-1 text-[9px] text-right text-[#699c86] flex items-center justify-end gap-1">
-                          <CheckCircle2 size={10} /> Answered automatically · 08:45
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div id="demo" className="wa-rise scroll-mt-24" style={{ animationDelay: "150ms" }}>
+              <DemoChatWidget />
             </div>
           </div>
         </section>
 
-        <section className="border-y border-[#eee7df] bg-[#fffdfa] px-5 py-12 lg:px-8">
+        {/* 2. PROBLEM / AGITATION */}
+        <section className="border-y border-[#eee7df] bg-[#faf7f3] py-20 px-5 lg:px-8">
           <div className="mx-auto max-w-[1200px]">
-            <h2 className="text-center font-['Space_Grotesk',ui-sans-serif,sans-serif] text-2xl font-bold tracking-[-0.04em] text-[#213b30]">Built for wholesalers who live on WhatsApp</h2>
-            <div className="mt-7 flex flex-wrap justify-center gap-2">
-              {["Building supplies", "Packaging", "Auto parts", "Food distribution", "Stationery", "Beauty supply", "1–10 staff · Kingston, Jamaica"].map((chip, i) => (
-                <span key={chip} className={`inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-semibold ${i === 6 ? "border border-[#cbe8d9] bg-[#eaf4ee] text-[#1c775b]" : "border border-[#e8dfd6] bg-[#f8f4ef] text-[#777b75]"}`}>
-                  {chip}
-                </span>
+            <div className="text-center mb-12">
+              <h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[clamp(28px,4vw,36px)] font-bold tracking-[-0.04em] text-[#213b30]">
+                Your phone is running you.
+              </h2>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-6">
+              {[
+                { title: "Hours, gone", desc: "Every price list you type out by hand, every 'wah time unu close' you answer — time that never shows up on an invoice." },
+                { title: "Orders missed", desc: "While you're mid-reply to one customer, three more are waiting in the same inbox, further down, unread." },
+                { title: "The 20th time", desc: "The delivery-area question doesn't get faster to answer the fiftieth time you type it out. It just gets more tiring." },
+              ].map((card) => (
+                <div key={card.title} className="rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] p-6">
+                  <h3 className="text-base font-bold text-[#213b30] mb-2">{card.title}</h3>
+                  <p className="text-sm leading-relaxed text-[#777b75]">{card.desc}</p>
+                </div>
               ))}
             </div>
+            <p className="mt-8 text-center text-sm font-bold text-[#38584b]">Every unanswered message is a customer who found someone else.</p>
           </div>
         </section>
 
-        {/* How it works */}
-        <section id="how-it-works" className="border-t border-[#f0e9e1] bg-[#faf7f3] py-24 px-5 lg:px-8">
+        {/* 3. HOW IT WORKS */}
+        <section id="how-it-works" className="scroll-mt-20 py-24 px-5 lg:px-8 bg-[#fffdfa]">
           <div className="mx-auto max-w-[1200px]">
             <div className="text-center mb-16">
               <h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[clamp(28px,4vw,36px)] font-bold tracking-[-0.04em] text-[#213b30]">
                 How it works
               </h2>
-              <p className="mt-3 text-sm text-[#777b75]">Four steps to a quieter phone and faster sales.</p>
+              <p className="mt-3 text-sm text-[#777b75]">You stay in control at every step.</p>
             </div>
-            <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 relative">
-              <div className="hidden md:block absolute top-1/2 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-[#d8cec3] to-transparent -translate-y-1/2"></div>
-              
+            <div className="grid sm:grid-cols-3 gap-8 relative">
+              <div className="hidden sm:block absolute top-6 left-[16%] right-[16%] h-[1px] bg-gradient-to-r from-transparent via-[#d8cec3] to-transparent" />
               {[
-                { title: "Connect your number", desc: "Keep your existing WhatsApp Business number and Instagram page. Nothing changes for your customers." },
-                { title: "Load what you already know", desc: "Upload your price lists, delivery zones, and FAQs. Delegate builds a knowledge base from your existing documents." },
-                { title: "Del takes the repeat questions", desc: "Repeat questions are answered instantly, word for word how you'd say it, using only your approved facts." },
-                { title: "You get what's left", desc: "Anything uncertain goes to your phone, plus you receive a morning digest of what needs your attention." }
+                { title: "Load your price list and FAQs", desc: "Upload what you already have. Nothing is answered until you've approved it." },
+                { title: "Del answers what you approved", desc: "Word for word how you'd say it — never a guess, never something you didn't put there yourself." },
+                { title: "Anything uncertain comes to you", desc: "Del hands off the moment it isn't sure, straight to your WhatsApp, no guessing on its part." },
               ].map((step, i) => (
-                <div key={i} className="relative z-10 flex flex-col items-center text-center">
+                <div key={step.title} className="relative z-10 flex flex-col items-center text-center">
                   <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#fffdfa] border border-[#e5dbd1] text-lg font-bold text-[#1c775b] shadow-sm mb-5">
                     {i + 1}
                   </div>
                   <h3 className="text-lg font-bold text-[#213b30] mb-2">{step.title}</h3>
-                  <p className="text-sm text-[#777b75] leading-relaxed max-w-[250px]">{step.desc}</p>
+                  <p className="text-sm text-[#777b75] leading-relaxed max-w-[260px]">{step.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Features */}
-        <section id="features" className="py-24 px-5 lg:px-8 bg-[#fffdfa]">
-          <div className="mx-auto max-w-[1200px]">
-            <div className="text-center mb-16">
-              <h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[clamp(28px,4vw,36px)] font-bold tracking-[-0.04em] text-[#213b30]">
-                Built for Jamaican wholesalers
+        {/* 4. RADICAL TRANSPARENCY */}
+        <section className="py-20 px-5 lg:px-8 bg-[#faf7f3] border-y border-[#eee7df]">
+          <div className="mx-auto max-w-[900px]">
+            <div className="rounded-3xl border-2 border-dashed border-[#c7bcae] bg-[#fffdfa] p-8 md:p-10">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#a36b43] mb-3">The honest limits</p>
+              <h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-2xl md:text-3xl font-bold tracking-[-0.04em] text-[#213b30] mb-2">
+                What Delegate does not do.
               </h2>
-            </div>
-            
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {[
-                { icon: FileText, title: "Media library", desc: "Upload PDFs, images, and price lists. Del, your business's AI assistant, automatically sends the right file when asked." },
-                { icon: ShieldCheck, title: "Approved answers only", desc: "No AI hallucinations. If the answer isn't in your Knowledge Base, Del hands it over to you." },
-                { icon: Zap, title: "One-tap correction", desc: "Edit a generated response before it goes out, or quickly update a fact right from the chat." },
-                { icon: ImageIcon, title: "Photo reading", desc: "Reads the text in a customer's photo, but never confirms stock, pricing, or availability by itself." },
-                { icon: Clock, title: "Morning digest", desc: "Wake up to a clean summary of what happened overnight and which orders need to go out today." },
-                { icon: Instagram, title: "WhatsApp + Instagram", desc: "Manage one inbox with WhatsApp and Instagram conversations clearly split by platform." }
-              ].map((feature, i) => (
-                <div key={i} className="rounded-2xl border border-[#e5dbd1] bg-[#faf7f3] p-6 transition hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(73,60,46,0.06)] hover:bg-[#fffdfa]">
-                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#eaf4ee] text-[#1c775b] mb-4">
-                    <feature.icon size={20} />
+              <p className="text-sm text-[#777b75] mb-6 max-w-xl">We'd rather you know this now than find out after you've paid for it. If everything above sounded believable, it's because of this list.</p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  "Doesn't take orders — it answers questions and hands orders to you",
+                  "Doesn't take payments of any kind",
+                  "Doesn't check or confirm stock",
+                  "Doesn't book appointments or reserve anything",
+                  "Reads the text in a photo — it doesn't recognize what's in the photo",
+                ].map((limit) => (
+                  <div key={limit} className="flex items-start gap-2.5 rounded-xl bg-[#faf5ef] p-3.5">
+                    <Ban size={16} className="mt-0.5 shrink-0 text-[#a64a2b]" />
+                    <span className="text-sm leading-relaxed text-[#4a5750]">{limit}</span>
                   </div>
-                  <h3 className="text-base font-bold text-[#213b30] mb-2">{feature.title}</h3>
-                  <p className="text-sm text-[#777b75] leading-relaxed">{feature.desc}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. THREE PROMISES */}
+        <section className="py-20 px-5 lg:px-8 bg-[#fffdfa]">
+          <div className="mx-auto max-w-[1000px]">
+            <div className="grid sm:grid-cols-3 gap-6 text-center">
+              {[
+                { icon: Smartphone, title: "Nothing changes for customers", desc: "Same number, same WhatsApp, same Instagram page you already have." },
+                { icon: ShieldCheck, title: "Only what you approved", desc: "Del can't say anything you didn't type and approve yourself." },
+                { icon: MousePointerClick, title: "One tap turns it off", desc: "See a wrong answer? Disable that fact in one tap, right from the chat." },
+              ].map((promise) => (
+                <div key={promise.title} className="flex flex-col items-center">
+                  <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#eaf4ee] text-[#1c775b] mb-4">
+                    <promise.icon size={24} />
+                  </div>
+                  <h3 className="text-base font-bold text-[#213b30] mb-1.5">{promise.title}</h3>
+                  <p className="text-sm text-[#777b75] leading-relaxed max-w-[240px]">{promise.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Pricing */}
-        <section id="pricing" className="py-24 px-5 lg:px-8 text-white" style={{ backgroundColor: '#152e25' }}>
+        {/* 6. PRICING */}
+        <section id="pricing" className="scroll-mt-20 py-24 px-5 lg:px-8 text-white" style={{ backgroundColor: '#152e25' }}>
           <div className="mx-auto max-w-[1200px]">
-            <div className="text-center mb-6">
+            <div className="text-center mb-4">
               <h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[clamp(28px,4vw,36px)] font-bold tracking-[-0.04em] text-white">
                 Simple pricing
               </h2>
-              <p className="mt-3 text-sm text-[#9aa8a1]">No hidden fees. Pay in JMD.</p>
+              <p className="mt-3 text-sm text-[#9aa8a1]">No hidden fees.</p>
             </div>
 
-            <div className="mx-auto mb-12 max-w-2xl text-center rounded-xl bg-[#1c4a39] border border-[#2a6650] py-3 px-4">
-              <p className="text-sm font-bold text-[#c2f2da]">
-                The first five businesses lock in J$4,500/mo — for as long as they stay.
-              </p>
+            <div className="mb-10 flex justify-center">
+              <div className="inline-flex rounded-full bg-[#1c4a39] p-1 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setCurrency("JMD")}
+                  className={`rounded-full px-4 py-2 transition ${currency === "JMD" ? "bg-white text-[#0d261e]" : "text-[#9aa8a1]"}`}
+                >
+                  J$ JMD
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrency("USD")}
+                  className={`rounded-full px-4 py-2 transition ${currency === "USD" ? "bg-white text-[#0d261e]" : "text-[#9aa8a1]"}`}
+                >
+                  US$ USD
+                </button>
+              </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 max-w-[1000px] mx-auto">
-              {/* Starter */}
-              <div className="rounded-3xl border border-[#2a4539] bg-[#1a382d] p-8">
-                <h3 className="text-lg font-bold text-white mb-2">Starter</h3>
-                <div className="mb-6">
-                  <span className="text-3xl font-bold text-white">J$7,500</span>
-                  <span className="text-sm text-[#8ea098]"> /mo</span>
-                  <p className="text-xs text-[#6e857b] mt-1">~US$49/mo</p>
+            <div className="grid md:grid-cols-3 gap-6 max-w-[1000px] mx-auto items-start">
+              {PLANS.map((plan) => (
+                <div
+                  key={plan.id}
+                  className={
+                    plan.popular
+                      ? "relative rounded-3xl border-2 border-[#3fc192] bg-[#1c3f32] p-8 md:-mt-4 md:mb-4 shadow-[0_24px_64px_rgba(0,0,0,0.4)]"
+                      : "rounded-3xl border border-[#2a4539] bg-[#1a382d] p-8"
+                  }
+                >
+                  {plan.popular && (
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#3fc192] text-[#0d261e] text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                      Most popular
+                    </div>
+                  )}
+                  <h3 className="text-lg font-bold text-white mb-2">{plan.name}</h3>
+                  <div className="mb-2">
+                    {plan.foundingJmd && currency === "JMD" ? (
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-xl font-bold text-[#6e857b] line-through">{formatPrice(plan.jmd, currency)}</span>
+                        <span className="text-3xl font-bold text-[#3fc192]">{formatPrice(plan.foundingJmd, currency)}</span>
+                      </div>
+                    ) : (
+                      <span className="text-3xl font-bold text-white">{formatPrice(plan.jmd, currency)}</span>
+                    )}
+                    <span className="text-sm text-[#8ea098]"> /mo</span>
+                    {currency === "JMD" && <p className="text-xs text-[#6e857b] mt-1">~{formatPrice(plan.usd, "USD")}/mo</p>}
+                  </div>
+                  {plan.foundingJmd && currency === "JMD" && (
+                    <p className="mb-6 text-xs font-bold text-[#3fc192]">
+                      Locked for the first {FOUNDING_SPOTS_REMAINING} businesses only, for as long as they stay.
+                    </p>
+                  )}
+                  <ul className={`space-y-4 text-sm text-[#a3b3ac] ${plan.foundingJmd ? "mb-6" : "mb-8 mt-6"}`}>
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex gap-3"><CheckCircle2 size={16} className="text-[#3fc192] shrink-0" /> {feature}</li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={`/login?plan=${plan.id}`}
+                    className={
+                      plan.popular
+                        ? "block w-full text-center rounded-xl bg-[#3fc192] px-5 py-3 text-sm font-bold text-[#0d261e] transition hover:bg-[#34a87e] shadow-lg"
+                        : "block w-full text-center rounded-xl border border-[#305948] bg-transparent px-5 py-3 text-sm font-bold text-white transition hover:bg-[#204234]"
+                    }
+                  >
+                    Start free for 2 weeks
+                  </Link>
                 </div>
-                <ul className="space-y-4 text-sm text-[#a3b3ac] mb-8">
-                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-[#3fc192] shrink-0" /> WhatsApp inbox</li>
-                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-[#3fc192] shrink-0" /> Media library</li>
-                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-[#3fc192] shrink-0" /> Approved FAQs</li>
-                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-[#3fc192] shrink-0" /> Correction loop</li>
-                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-[#3fc192] shrink-0" /> Morning digest</li>
-                </ul>
-                <Link href="/login" className="block w-full text-center rounded-xl border border-[#305948] bg-transparent px-5 py-3 text-sm font-bold text-white transition hover:bg-[#204234]">
-                  Start Starter
-                </Link>
-              </div>
+              ))}
+            </div>
 
-              {/* Plus */}
-              <div className="relative rounded-3xl border-2 border-[#3fc192] bg-[#1c3f32] p-8 lg:-mt-4 lg:mb-4 shadow-[0_24px_64px_rgba(0,0,0,0.4)]">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#3fc192] text-[#0d261e] text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-                  Most popular
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2">Plus</h3>
-                <div className="mb-6">
-                  <span className="text-3xl font-bold text-white">J$12,500</span>
-                  <span className="text-sm text-[#8ea098]"> /mo</span>
-                  <p className="text-xs text-[#6e857b] mt-1">~US$79/mo</p>
-                </div>
-                <ul className="space-y-4 text-sm text-[#a3b3ac] mb-8">
-                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-[#3fc192] shrink-0" /> Everything in Starter</li>
-                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-[#3fc192] shrink-0" /> Instagram DMs</li>
-                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-[#3fc192] shrink-0" /> One inbox, split by platform</li>
-                </ul>
-                <Link href="/login" className="block w-full text-center rounded-xl bg-[#3fc192] px-5 py-3 text-sm font-bold text-[#0d261e] transition hover:bg-[#34a87e] shadow-lg">
-                  Start Plus
-                </Link>
-              </div>
-
-              {/* Pro */}
-              <div className="rounded-3xl border border-[#2a4539] bg-[#1a382d] p-8">
-                <h3 className="text-lg font-bold text-white mb-2">Pro</h3>
-                <div className="mb-6">
-                  <span className="text-3xl font-bold text-white">J$20,000</span>
-                  <span className="text-sm text-[#8ea098]"> /mo</span>
-                  <p className="text-xs text-[#6e857b] mt-1">~US$129/mo</p>
-                </div>
-                <ul className="space-y-4 text-sm text-[#a3b3ac] mb-8">
-                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-[#3fc192] shrink-0" /> Everything in Plus</li>
-                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-[#3fc192] shrink-0" /> Messenger</li>
-                  <li className="flex gap-3"><CheckCircle2 size={16} className="text-[#3fc192] shrink-0" /> A second connected account</li>
-                </ul>
-                <Link href="/login" className="block w-full text-center rounded-xl border border-[#305948] bg-transparent px-5 py-3 text-sm font-bold text-white transition hover:bg-[#204234]">
-                  Start Pro
-                </Link>
-              </div>
+            <div className="mx-auto mt-10 max-w-2xl text-center rounded-2xl border border-[#2a6650] bg-[#1c4a39] py-6 px-6">
+              <p className="text-lg font-bold text-[#c2f2da]">Two weeks free. If it doesn't save you time, we remove it ourselves.</p>
+              <p className="mt-2 text-xs text-[#8ea098]">No card required to start. Cancel anytime — same number, nothing to migrate back.</p>
             </div>
           </div>
         </section>
 
-        {/* CTA */}
+        {/* 7. FOUNDER CREDIBILITY */}
+        <section className="py-24 px-5 lg:px-8 bg-[#fffdfa]">
+          <div className="mx-auto max-w-[720px]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#2a7a5d] mb-3 text-center">Why I built this</p>
+            <div className="rounded-3xl border border-[#e5dbd1] bg-[#faf7f3] p-8 md:p-10">
+              <p className="text-lg leading-relaxed text-[#3a4841]">
+                I kept watching Kingston wholesalers lose orders to their own inbox — not from bad service, just from too many "wah di price stay" messages arriving on top of everything else they had to do. Delegate is the tool I wanted to hand them: something that only ever says what you've approved, and hands you anything it isn't sure about.
+              </p>
+              <p className="mt-4 text-lg leading-relaxed text-[#3a4841]">
+                I'm Kingston-based, and if you sign up I'll come set it up with you myself — most owners are live in under 30 minutes, on the same WhatsApp Business number you already use.
+              </p>
+              <p className="mt-6 font-['Space_Grotesk',ui-sans-serif,sans-serif] text-base font-bold text-[#213b30]">— Geo, builder of Delegate</p>
+            </div>
+            {/* TODO: replace with real customer quotes once first five are live, never fill with invented names */}
+          </div>
+        </section>
+
+        {/* 8. OBJECTION-HANDLING FAQ */}
+        <section id="faq" className="scroll-mt-20 py-24 px-5 lg:px-8 bg-[#faf7f3] border-t border-[#eee7df]">
+          <div className="mx-auto max-w-[760px]">
+            <div className="text-center mb-12">
+              <h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[clamp(28px,4vw,36px)] font-bold tracking-[-0.04em] text-[#213b30]">
+                Questions owners actually ask
+              </h2>
+            </div>
+            <div className="space-y-3">
+              {faqs.map((item, i) => (
+                <FaqAccordionItem
+                  key={item.question}
+                  question={item.question}
+                  answer={item.answer}
+                  open={openFaq === i}
+                  onToggle={() => setOpenFaq((current) => (current === i ? null : i))}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 9. FINAL CTA */}
         <section className="bg-[#16352b] py-24 px-5 lg:px-8 text-center">
           <div className="mx-auto max-w-3xl">
             <h2 className="font-['Space_Grotesk',ui-sans-serif,sans-serif] text-[clamp(32px,5vw,48px)] font-bold tracking-[-0.04em] text-white leading-tight">
               Ready to stop typing the same answer twice a day?
             </h2>
+            <p className="mt-4 text-sm text-[#9aa8a1]">Two weeks free. Same number. Nothing changes until you approve it.</p>
             <div className="mt-10 flex justify-center">
               <Link href="/login" className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-bold text-[#1c382d] transition hover:bg-[#f4eee8] hover:-translate-y-0.5 shadow-xl">
-                Get started <ArrowRight size={18} />
+                Start free for 2 weeks <ArrowRight size={18} />
               </Link>
             </div>
           </div>
         </section>
       </main>
 
+      {/* Sticky mobile CTA */}
+      <div
+        className={`md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-[#e5dbd1] bg-[#fffdfa]/95 backdrop-blur-xl px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(73,60,46,0.1)] transition-transform duration-200 ${showStickyCta ? "translate-y-0" : "translate-y-full"}`}
+      >
+        <Link href="/login" className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1c775b] px-5 py-3.5 text-sm font-bold text-white shadow-md">
+          <Clock3 size={15} /> Start free for 2 weeks
+        </Link>
+      </div>
+
       {/* Footer */}
-      <footer className="border-t border-[#e7ddd2] bg-[#fffdfa] py-12 px-5 lg:px-8">
+      <footer className="border-t border-[#e7ddd2] bg-[#fffdfa] py-12 px-5 lg:px-8 pb-24 md:pb-12">
         <div className="mx-auto max-w-[1200px]">
           <div className="grid gap-10 sm:grid-cols-[1.5fr_1fr_1fr]">
             <div>
@@ -329,6 +578,7 @@ export default function Landing() {
               <div className="mt-4 flex flex-col gap-3 text-sm text-[#777b75]">
                 <a href="#how-it-works" className="hover:text-[#1c775b]">How it works</a>
                 <a href="#pricing" className="hover:text-[#1c775b]">Pricing</a>
+                <a href="#faq" className="hover:text-[#1c775b]">FAQ</a>
                 <Link href="/login" className="hover:text-[#1c775b]">Log in</Link>
               </div>
             </div>
