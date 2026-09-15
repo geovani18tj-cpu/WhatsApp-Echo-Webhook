@@ -11,7 +11,7 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
-  
+
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
   --color-card-border: hsl(var(--card-border));
@@ -20,39 +20,96 @@
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
 
   --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
+
+  /* ===== Design tokens — single source of truth for the whole app ===== */
+  --color-green-900: hsl(var(--green-900));
+  --color-green-700: hsl(var(--green-700));
+  --color-green-500: hsl(var(--green-500));
+  --color-green-100: hsl(var(--green-100));
+  --color-cream-50: hsl(var(--cream-50));
+  --color-neutral-100: hsl(var(--neutral-100));
+  --color-neutral-200: hsl(var(--neutral-200));
+  --color-neutral-500: hsl(var(--neutral-500));
+  --color-neutral-900: hsl(var(--neutral-900));
+  --color-orange-600: hsl(var(--orange-600));
+  --color-orange-700: hsl(var(--orange-700));
+  --color-orange-100: hsl(var(--orange-100));
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-danger: hsl(var(--danger));
+  /* Instagram brand-identity exception: the one color trio outside the
+     product palette, used only so the Instagram channel reads as visually
+     distinct from WhatsApp's own green. See CLAUDE.md-adjacent note in the
+     token block below. */
+  --color-instagram-600: hsl(var(--instagram-600));
+  --color-instagram-100: hsl(var(--instagram-100));
+  --color-instagram-200: hsl(var(--instagram-200));
+
+  /* Shared card shape, used by every card with no per-screen variation. */
+  --radius-card: 20px;
+  --shadow-card: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
 }
 
 :root {
-  --background: 33 30% 94%; 
-  --foreground: 152 14% 17%; 
-  --border: 31 28% 86%; 
-  --card: 36 100% 99%; 
-  --card-foreground: 152 14% 17%; 
-  --card-border: 31 28% 86%; 
-  --primary: 160 61% 29%; 
-  --primary-foreground: 0 0% 100%; 
-  --muted: 34 41% 97%; 
-  --muted-foreground: 100 3% 47%; 
-  --input: 31 28% 86%;
-  --ring: 160 61% 29%;
+  /* shadcn semantic slots, aliased onto the token palette below so both
+     naming conventions stay in sync with one source of truth. */
+  --background: var(--cream-50);
+  --foreground: var(--neutral-900);
+  --border: var(--neutral-200);
+  --card: var(--cream-50);
+  --card-foreground: var(--neutral-900);
+  --card-border: var(--neutral-200);
+  --primary: var(--green-700);
+  --primary-foreground: 0 0% 100%;
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--neutral-500);
+  --input: var(--neutral-200);
+  --ring: var(--green-700);
+  --destructive: var(--danger);
+  --destructive-foreground: 0 0% 100%;
   --radius: 0.5rem;
+
+  /* ===== Token palette (HSL triples, per shadcn/Tailwind v4 convention) ===== */
+  --green-900: 159 51% 12%;   /* #0f2e23 — one dark "hero" card per screen only */
+  --green-700: 162 62% 29%;   /* #1c775b — primary buttons, active nav, links */
+  --green-500: 160 54% 40%;   /* #2f9c78 — secondary accents, positive deltas */
+  --green-100: 156 37% 92%;   /* #e3f2ec — tint backgrounds */
+  --cream-50:  36 100% 99%;   /* #fffdfa — page background */
+  --neutral-100: 43 26% 95%;  /* #f5f3ee — card surface */
+  --neutral-200: 42 22% 88%;  /* #e8e4db — borders/dividers */
+  --neutral-500: 43 7% 51%;   /* #8a8578 — secondary text */
+  --neutral-900: 43 13% 11%;  /* #1f1d18 — primary text */
+  --orange-600: 21 66% 60%;   /* #dc8454 — CTA + Del's arrow ONLY */
+  --orange-700: 21 53% 50%;   /* #c26a3c — hover/pressed */
+  --orange-100: 25 83% 91%;   /* #fbe4d4 — founding-offer badge */
+  --success: 160 54% 40%;     /* #2f9c78 */
+  --warning: 39 67% 55%;      /* #d9a441 */
+  --danger:  8 51% 50%;       /* #c1503f */
+  /* Exception, not part of the 15-token brand palette: Instagram's own
+     brand purple, kept solely to distinguish the Instagram channel badge
+     from WhatsApp's green throughout the inbox. */
+  --instagram-600: 302 21% 45%;
+  --instagram-100: 280 45% 96%;
+  --instagram-200: 249 33% 90%;
 }
 
 .dark {
-  --background: 152 14% 17%; 
-  --foreground: 33 30% 94%; 
-  --border: 156 22% 28%; 
-  --card: 152 14% 14%; 
-  --card-foreground: 33 30% 94%; 
-  --card-border: 156 22% 28%; 
-  --primary: 160 61% 29%; 
-  --primary-foreground: 0 0% 100%; 
-  --muted: 156 22% 20%; 
-  --muted-foreground: 100 3% 67%; 
+  --background: 152 14% 17%;
+  --foreground: 33 30% 94%;
+  --border: 156 22% 28%;
+  --card: 152 14% 14%;
+  --card-foreground: 33 30% 94%;
+  --card-border: 156 22% 28%;
+  --primary: 160 61% 29%;
+  --primary-foreground: 0 0% 100%;
+  --muted: 156 22% 20%;
+  --muted-foreground: 100 3% 67%;
   --input: 156 22% 28%;
   --ring: 160 61% 29%;
 }

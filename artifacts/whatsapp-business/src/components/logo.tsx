@@ -36,7 +36,7 @@ export function Logo({ size = "md", light = false }: LogoProps) {
         <DelAvatar size={styles.icon * 2} light={light} />
       </span>
       <span
-        className={`font-['Space_Grotesk',ui-sans-serif,sans-serif] font-bold tracking-[-0.04em] text-[#16352b] ${styles.wordmark}`}
+        className={`font-['Space_Grotesk',ui-sans-serif,sans-serif] font-bold tracking-[-0.04em] ${light ? "text-white" : "text-green-900"} ${styles.wordmark}`}
       >
         Delegate
       </span>

@@ -247,17 +247,17 @@ export function DelChat({ token, messages, input, setInput, onSend, isPending, p
   }, [messages]);
 
   return (
-    <div className="flex h-full min-h-[700px] flex-col wa-rise bg-[#fffdfa] rounded-2xl border border-[#e5dbd1] shadow-[0_10px_32px_rgba(73,60,46,0.05)] overflow-hidden">
-      <div className="p-5 border-b border-[#eee7df] flex justify-between items-center bg-white">
+    <div className="flex h-full min-h-[700px] flex-col wa-rise bg-cream-50 rounded-card border border-neutral-200 shadow-card overflow-hidden">
+      <div className="p-5 border-b border-neutral-200 flex justify-between items-center bg-white">
         <div className="flex items-center gap-3">
           <DelAvatar size={40} pulse={pulse} />
           <div>
-            <h2 className="font-['Space_Grotesk'] text-lg font-bold tracking-[-0.04em] text-[#293d33]">Del</h2>
-            <p className="text-xs text-[#85847d] mt-0.5">Your business's AI assistant</p>
+            <h2 className="font-['Space_Grotesk'] text-lg font-bold tracking-[-0.04em] text-green-900">Del</h2>
+            <p className="text-[13px] text-neutral-500 mt-0.5">Your business's AI assistant</p>
           </div>
         </div>
         {!token && (
-          <div className="flex items-center gap-1.5 bg-[#fdf3e1] text-[#a67c3b] px-3 py-1.5 rounded-lg text-xs font-semibold">
+          <div className="flex items-center gap-1.5 bg-neutral-100 text-warning px-3 py-1.5 rounded-lg text-[13px] font-semibold">
             <Info size={14} /> Preview Mode
           </div>
         )}
@@ -267,11 +267,11 @@ export function DelChat({ token, messages, input, setInput, onSend, isPending, p
         {messages.map((m, i) => (
           <div key={i} className={`flex gap-3 max-w-[85%] ${m.role === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
             {m.role === 'user' ? (
-              <div className="shrink-0 h-8 w-8 rounded-full grid place-items-center text-xs font-bold bg-[#d8c7ad] text-[#684f32]">KS</div>
+              <div className="shrink-0 h-8 w-8 rounded-full grid place-items-center text-[13px] font-bold bg-neutral-200 text-neutral-900">KS</div>
             ) : (
               <DelAvatar size={32} className="shrink-0" />
             )}
-            <div className={`p-3.5 rounded-2xl text-[13px] leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-[#1c775b] text-white rounded-tr-sm' : 'bg-white border border-[#eee7df] text-[#3a4841] rounded-tl-sm'}`}>
+            <div className={`p-3.5 rounded-2xl text-[13px] leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-green-700 text-white rounded-tr-sm' : 'bg-white border border-neutral-200 text-green-900 rounded-tl-sm'}`}>
               {m.content}
             </div>
           </div>
@@ -279,31 +279,31 @@ export function DelChat({ token, messages, input, setInput, onSend, isPending, p
         {isPending && (
           <div className="flex items-center gap-3 max-w-[85%]">
             <DelAvatar size={32} className="shrink-0" />
-            <div className="p-4 rounded-2xl bg-white border border-[#eee7df] rounded-tl-sm flex items-center gap-2">
-              <span className="text-xs font-semibold text-[#85847d]">Del is typing</span>
+            <div className="p-4 rounded-2xl bg-white border border-neutral-200 rounded-tl-sm flex items-center gap-2">
+              <span className="text-[13px] font-semibold text-neutral-500">Del is typing</span>
               <span className="flex gap-1 items-center">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#a6b8ae] del-typing-dot" style={{animationDelay: '0ms'}} />
-                <span className="h-1.5 w-1.5 rounded-full bg-[#a6b8ae] del-typing-dot" style={{animationDelay: '150ms'}} />
-                <span className="h-1.5 w-1.5 rounded-full bg-[#a6b8ae] del-typing-dot" style={{animationDelay: '300ms'}} />
+                <span className="h-1.5 w-1.5 rounded-full bg-neutral-500 del-typing-dot" style={{animationDelay: '0ms'}} />
+                <span className="h-1.5 w-1.5 rounded-full bg-neutral-500 del-typing-dot" style={{animationDelay: '150ms'}} />
+                <span className="h-1.5 w-1.5 rounded-full bg-neutral-500 del-typing-dot" style={{animationDelay: '300ms'}} />
               </span>
             </div>
           </div>
         )}
       </div>
 
-      <div className="p-4 border-t border-[#eee7df] bg-[#faf5ef]">
+      <div className="p-4 border-t border-neutral-200 bg-neutral-100">
         <form onSubmit={(e) => { e.preventDefault(); onSend(); }} className="relative flex items-center">
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="Type a new rule, menu item, or question..."
-            className="w-full bg-white border border-[#dcd5cc] rounded-xl pl-4 pr-12 py-3.5 text-sm text-[#2b3430] placeholder:text-[#a09990] outline-none focus:border-[#77b79b] focus:ring-2 focus:ring-[#e9f5ed] transition shadow-sm"
+            className="w-full bg-white border border-neutral-200 rounded-xl pl-4 pr-12 py-3.5 text-sm text-green-900 placeholder:text-neutral-500 outline-none focus:border-neutral-500 focus:ring-2 focus:ring-green-100 transition shadow-sm"
             disabled={isPending}
           />
           <button
             type="submit"
             disabled={!input.trim() || isPending}
-            className="absolute right-2 p-2 rounded-lg text-[#1c775b] hover:bg-[#eef7f0] disabled:opacity-40 disabled:hover:bg-transparent transition focus-visible:outline-none"
+            className="absolute right-2 p-2 rounded-lg text-green-700 hover:bg-neutral-100 disabled:opacity-40 disabled:hover:bg-transparent transition focus-visible:outline-none"
           >
             <Send size={18} strokeWidth={2} />
           </button>

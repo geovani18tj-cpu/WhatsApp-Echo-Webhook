@@ -10,8 +10,8 @@ type DelAvatarProps = {
 // small avatar wherever Del "speaks" (chat, digest, typing indicator,
 // correction loop). One visual treatment, everywhere — no second avatar style.
 export function DelAvatar({ size = 28, light = false, pulse = 0, className = "" }: DelAvatarProps) {
-  const bubble = light ? "#fffdfa" : "#1c775b";
-  const dots = light ? "#1c775b" : "#fffdfa";
+  const bubble = light ? "var(--color-cream-50)" : "var(--color-green-700)";
+  const dots = light ? "var(--color-green-700)" : "var(--color-cream-50)";
 
   return (
     <svg viewBox="0 0 96 96" fill="none" width={size} height={size} className={className} aria-hidden="true">
@@ -22,7 +22,7 @@ export function DelAvatar({ size = 28, light = false, pulse = 0, className = "" 
       <path
         key={pulse}
         d="M62 45 H74"
-        stroke="#dc8454"
+        stroke="var(--color-orange-600)"
         strokeWidth="6"
         strokeLinecap="round"
         className={pulse ? "del-avatar-arrow-nudge" : undefined}
@@ -30,7 +30,7 @@ export function DelAvatar({ size = 28, light = false, pulse = 0, className = "" 
       <path
         key={`${pulse}-head`}
         d="M68 39 L74 45 L68 51"
-        stroke="#dc8454"
+        stroke="var(--color-orange-600)"
         strokeWidth="6"
         strokeLinecap="round"
         strokeLinejoin="round"
