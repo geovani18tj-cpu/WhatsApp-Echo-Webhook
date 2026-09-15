@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import {
-  AlertCircle, Bell, BookOpen, Bot, Check, ChevronDown, ChevronRight, CircleHelp, Clock3, FileText, Filter, Info, Instagram, LayoutPanelTop, ListFilter, Loader2, MapPin, MessageCircle, MoreHorizontal, Paperclip, Pencil, Plus, Search, Send, Settings2, ShieldCheck, Sparkles, Star, Tag, X, FileUp
+  AlertCircle, Bell, BookOpen, Bot, Check, ChevronDown, ChevronRight, CircleHelp, Clock3, FileText, Filter, Info, Instagram, LayoutPanelTop, ListFilter, Loader2, MapPin, MessageCircle, MoreHorizontal, Paperclip, Pencil, Plus, Search, Send, Settings2, Share2, ShieldCheck, Sparkles, Star, Tag, X, FileUp
 } from "lucide-react";
 import {
   getHealthCheckQueryKey,
@@ -669,7 +669,7 @@ export default function Home() {
               {["Inbox", "Del", "Activity"].map((item) => (
                 <button key={item} data-testid={`nav-tab-${item}`} onClick={() => setActiveNav(item)} className={`whitespace-nowrap rounded-lg px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#238b68] ${activeNav === item ? "bg-[#fffdfa] text-[#176b52] shadow-sm" : "text-[#88847e] hover:text-[#38584b]"}`}>
                   {item}
-                  {item === "Inbox" ? <span className="ml-2 rounded-full bg-[#dc8454] px-1.5 py-0.5 text-[9px] text-white">3</span> : null}
+                  {item === "Inbox" ? <span className="ml-2 rounded-full bg-[#1c775b] px-1.5 py-0.5 text-[9px] text-white">3</span> : null}
                 </button>
               ))}
             </nav>
@@ -726,6 +726,22 @@ export default function Home() {
               </div>
             </div>
             <p className="mt-3 text-right text-[10px] font-bold text-[#a29a91]">— Del</p>
+          </section>
+
+          <section className="wa-rise mb-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#e5dbd1] bg-[#fffdfa] px-5 py-4 shadow-[0_10px_32px_rgba(73,60,46,0.04)]" style={{ animationDelay: "55ms" }} data-testid="panel-referral">
+            <div>
+              <p className="text-sm font-bold text-[#213b30]">Know a business drowning in the same messages?</p>
+              <p className="mt-1 text-xs text-[#85847d]">Tell them about Del — you both get a free month.</p>
+            </div>
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent("Hi! I've been using an AI assistant called Del to handle my WhatsApp messages — it answers my price list and hours automatically and only bothers me with what actually needs me. Might be worth a look for you too: [YOUR LANDING PAGE URL]")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-[#1c775b] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#145d46]"
+              data-testid="btn-share-referral"
+            >
+              <Share2 size={14} /> Share on WhatsApp
+            </a>
           </section>
 
           <section className="wa-rise grid gap-4 lg:grid-cols-[minmax(210px,0.85fr)_minmax(410px,1.65fr)_minmax(260px,0.92fr)]" style={{ animationDelay: "70ms" }}>
