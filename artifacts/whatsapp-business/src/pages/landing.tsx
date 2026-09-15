@@ -373,7 +373,7 @@ export default function Landing() {
             <div className="wa-rise flex justify-center" style={{ animationDelay: "150ms" }}>
               <div className="w-[280px] rounded-[36px] border-[6px] border-[#213b30] bg-[#213b30] shadow-[0_32px_64px_rgba(33,59,48,0.25)]">
                 <img
-                  src="/screenshots/inbox-mobile.png"
+                  src={`${import.meta.env.BASE_URL}screenshots/inbox-mobile.png`}
                   alt="Delegate inbox dashboard showing Del's morning digest and conversation list"
                   className="w-full rounded-[30px] block"
                 />
