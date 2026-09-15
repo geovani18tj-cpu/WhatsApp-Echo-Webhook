@@ -282,9 +282,9 @@ export function DelChat({ token, messages, input, setInput, onSend, isPending, p
             <div className="p-4 rounded-2xl bg-white border border-[#eee7df] rounded-tl-sm flex items-center gap-2">
               <span className="text-xs font-semibold text-[#85847d]">Del is typing</span>
               <span className="flex gap-1 items-center">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#cbd9d1] animate-bounce" style={{animationDelay: '0ms'}} />
-                <span className="h-1.5 w-1.5 rounded-full bg-[#cbd9d1] animate-bounce" style={{animationDelay: '150ms'}} />
-                <span className="h-1.5 w-1.5 rounded-full bg-[#cbd9d1] animate-bounce" style={{animationDelay: '300ms'}} />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#a6b8ae] del-typing-dot" style={{animationDelay: '0ms'}} />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#a6b8ae] del-typing-dot" style={{animationDelay: '150ms'}} />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#a6b8ae] del-typing-dot" style={{animationDelay: '300ms'}} />
               </span>
             </div>
           </div>

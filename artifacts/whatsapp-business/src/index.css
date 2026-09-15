@@ -79,7 +79,18 @@
   .del-avatar-eye { animation: del-blink 5.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
   @keyframes del-arrow-nudge { 0% { transform: translateX(0); } 45% { transform: translateX(3px); } 100% { transform: translateX(0); } }
   .del-avatar-arrow-nudge { animation: del-arrow-nudge .5s ease-out; transform-box: fill-box; transform-origin: center; }
-  @media (prefers-reduced-motion: reduce) {
-    .del-avatar-eye, .del-avatar-arrow-nudge { animation: none; }
+
+  /* Del is typing: an authored fade pulse (exponential ease-out) in place of
+     Tailwind's animate-bounce, which reads as dated/tacky. */
+  @keyframes del-typing-pulse { 0%, 100% { opacity: .3; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1); } }
+  .del-typing-dot { animation: del-typing-pulse 1.1s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
